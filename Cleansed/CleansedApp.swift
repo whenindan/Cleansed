@@ -5,13 +5,15 @@
 //  Created by Nguyen Trong Dat on 2/14/26.
 //
 
+import SwiftData
 import SwiftUI
 
 @main
 struct CleansedApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
         }
+        .modelContainer(for: [TodoItem.self, Habit.self, HabitCompletion.self, FocusSchedule.self])
     }
 }
