@@ -124,7 +124,7 @@ struct DayCircleView: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.borderless)
         .disabled(state == .future)  // Prevent tapping future dates?
     }
 }

@@ -17,76 +17,79 @@ struct HabitView: View {
     @FocusState private var isFocused: Bool
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            VStack(alignment: .leading, spacing: 0) {
-                // Title removed as requested
+        NavigationStack {
+            ZStack(alignment: .bottomTrailing) {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Title removed as requested
 
-                if habits.isEmpty {
-                    ContentUnavailableView(
-                        "No Habits",
-                        systemImage: "chart.bar",
-                        description: Text("Start building new habits today")
-                    )
-                    .frame(maxHeight: .infinity)
-                } else {
-                    List {
-                        ForEach(habits) { habit in
-                            ZStack {
-                                HabitRowView(habit: habit)
-                                NavigationLink(destination: HabitDetailView(habit: habit)) {
-                                    EmptyView()
+                    if habits.isEmpty {
+                        ContentUnavailableView(
+                            "No Habits",
+                            systemImage: "chart.bar",
+                            description: Text("Start building new habits today")
+                        )
+                        .frame(maxHeight: .infinity)
+                    } else {
+                        List {
+                            ForEach(habits) { habit in
+                                ZStack {
+                                    HabitRowView(habit: habit)
+                                        .contentShape(Rectangle())  // Ensure gaps in VStack are tappable
+
+                                    NavigationLink(destination: HabitDetailView(habit: habit)) {
+                                        Color.clear
+                                    }
+                                    .opacity(0)  // Hide the chevron
                                 }
-                                .opacity(0)  // Invisible link that covers the row, but we want button tappable?
-                                // Actually, separating row taps (days) vs row tap (navigate) is tricky.
-                                // Best practice: Tap on text/empty space navigates. Tap on circles toggles.
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(
+                                    EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
                             }
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(
-                                EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+                            .onDelete(perform: deleteHabits)
                         }
-                        .onDelete(perform: deleteHabits)
+                        .hideListSeparators()
                     }
-                    .hideListSeparators()
                 }
-            }
-            .background(Color(.systemBackground))
+                .background(Color(.systemBackground))
 
-            FAB {
-                isAddSheetPresented = true
-            }
-            .padding(24)
-        }
-        .sheet(isPresented: $isAddSheetPresented) {
-            NavigationStack {
-                Form {
-                    TextField("Habit Name", text: $newHabitName)
-                        .focused($isFocused)
-                        .onSubmit {
-                            addHabit()
-                        }
+                FAB {
+                    isAddSheetPresented = true
                 }
-                .navigationTitle("New Habit")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") {
-                            isAddSheetPresented = false
-                            newHabitName = ""
+                .padding(24)
+            }
+            .sheet(isPresented: $isAddSheetPresented) {
+                NavigationStack {
+                    Form {
+                        TextField("Habit Name", text: $newHabitName)
+                            .focused($isFocused)
+                            .onSubmit {
+                                addHabit()
+                            }
+                    }
+                    .navigationTitle("New Habit")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                isAddSheetPresented = false
+                                newHabitName = ""
+                            }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Add") {
+                                addHabit()
+                            }
+                            .disabled(
+                                newHabitName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            )
                         }
                     }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Add") {
-                            addHabit()
-                        }
-                        .disabled(
-                            newHabitName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .onAppear {
+                        isFocused = true
                     }
                 }
-                .onAppear {
-                    isFocused = true
-                }
+                .presentationDetents([.height(180)])
             }
-            .presentationDetents([.height(180)])
         }
     }
 
