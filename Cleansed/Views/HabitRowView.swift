@@ -56,9 +56,16 @@ struct HabitRowView: View {
 
                 Spacer()
 
-                Text("\(habit.calculateStreak()) day streak")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                if habit.calculateStreak() > 0 {
+                    HStack(spacing: 4) {
+                        Text("\(habit.calculateStreak()) day streak")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Image(systemName: "flame.fill")
+                            .foregroundStyle(.orange)
+                            .font(.subheadline)
+                    }
+                }
             }
 
             // Bottom Row: Week Days
@@ -105,9 +112,9 @@ struct DayCircleView: View {
     let onTap: () -> Void
 
     private var dayLabel: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E"  // M, T, W etc.
-        return String(formatter.string(from: date).prefix(1))
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: date)
+        return "\(day)"
     }
 
     var body: some View {

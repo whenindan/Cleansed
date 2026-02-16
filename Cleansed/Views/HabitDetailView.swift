@@ -19,20 +19,10 @@ struct HabitDetailView: View {
 
                             Text("\(habit.calculateStreak()) days")
                                 .font(.system(size: 42, weight: .medium, design: .default))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Color.primary)
                         }
 
                         Spacer()
-
-                        if habit.calculateStreak() > 0 {
-                            HStack(spacing: 4) {
-                                Text("You're on fire")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                                Image(systemName: "flame.fill")
-                                    .foregroundStyle(.orange)
-                            }
-                        }
                     }
 
                     // Best Streak
@@ -44,36 +34,32 @@ struct HabitDetailView: View {
 
                             Text("\(habit.calculateBestStreak()) days")
                                 .font(.system(size: 42, weight: .medium, design: .default))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Color.primary)
                         }
 
                         Spacer()
-
-                        if habit.calculateBestStreak() > 0 {
-                            Text("Well done!")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
                     }
 
                     // Completion Rate
-                    HStack {
+                    HStack(alignment: .top) {
                         let completion = habit.completionRate()
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Completion")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                            HStack {
+                                Text("Completion")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+
+                                Spacer()
+
+                                Text("\(completion.count) of \(completion.total) days")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
 
                             Text("\(completion.percent)%")
                                 .font(.system(size: 42, weight: .medium, design: .default))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Color.primary)
                         }
-
-                        Spacer()
-
-                        Text("\(completion.count) of \(completion.total) days")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
                     }
                 }
                 .padding(.horizontal)
@@ -116,16 +102,6 @@ struct HabitDetailView: View {
         }
         .navigationTitle(habit.name)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    // Menu action placeholder
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .foregroundStyle(.white)
-                }
-            }
-        }
     }
 
     // MARK: - Calendar Logic
@@ -188,20 +164,19 @@ struct CalendarDayCell: View {
         ZStack {
             if isCompleted {
                 Circle()
-                    .fill(Color.white)
+                    .fill(Color.primary)
             } else if isToday {
                 Circle()
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    .stroke(Color.primary.opacity(0.3), lineWidth: 1)
             } else {
                 Circle()
                     .fill(Color.clear)
             }
 
             Text("\(day)")
-                .foregroundStyle(isCompleted ? Color.black : Color.white)
+                .foregroundStyle(isCompleted ? Color(.systemBackground) : Color.primary)
                 .font(.system(size: 16, weight: .medium))
         }
         .frame(height: 40)
     }
 }
-
