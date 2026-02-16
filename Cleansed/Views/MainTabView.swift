@@ -24,6 +24,11 @@ struct MainTabView: View {
                 .tabItem {
                     Label("Focus", systemImage: "hourglass")
                 }
+
+            AccountView()
+                .tabItem {
+                    Label("Account", systemImage: "person.circle")
+                }
         }
         .tint(Color.primary)  // Black in Light, White in Dark
     }

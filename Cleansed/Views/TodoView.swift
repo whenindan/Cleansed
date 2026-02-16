@@ -19,12 +19,7 @@ struct TodoView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             VStack(alignment: .leading, spacing: 0) {
-                // Custom Header "Inbox"
-                Text("Inbox")
-                    .font(.system(size: 34, weight: .bold, design: .default))
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 8)
+                // Title removed as requested
 
                 if todos.isEmpty {
                     ContentUnavailableView(
@@ -36,13 +31,22 @@ struct TodoView: View {
                 } else {
                     List {
                         ForEach(todos) { todo in
-                            Toggle(isOn: Bindable(todo).isCompleted) {
+                            Button {
+                                todo.isCompleted.toggle()
+                                try? modelContext.save()
+                            } label: {
                                 Text(todo.title)
-                                    .font(.body)
+                                    .font(.system(size: 18, weight: .regular, design: .default))
+                                    .foregroundStyle(
+                                        todo.isCompleted ? Color.secondary : Color.primary
+                                    )
+                                    .strikethrough(todo.isCompleted, color: Color.secondary)
+                                    .animation(.default, value: todo.isCompleted)
                             }
-                            .toggleStyle(MinimalistCheckboxStyle())
+                            .buttonStyle(.plain)
                             .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))  // Padding for rows
+                            .listRowInsets(
+                                EdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24))
                         }
                         .onDelete(perform: deleteTodos)
                     }

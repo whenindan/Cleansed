@@ -54,4 +54,46 @@ final class Habit {
 
         return streak
     }
+    // Calculate best streak
+    func calculateBestStreak() -> Int {
+        let calendar = Calendar.current
+        let completedDates = Set(completions.map { calendar.startOfDay(for: $0.date) }).sorted()
+
+        var bestStreak = 0
+        var currentStreak = 0
+        var lastDate: Date?
+
+        for date in completedDates {
+            if let last = lastDate {
+                if calendar.isDate(
+                    date, inSameDayAs: calendar.date(byAdding: .day, value: 1, to: last)!)
+                {
+                    currentStreak += 1
+                } else {
+                    bestStreak = max(bestStreak, currentStreak)
+                    currentStreak = 1
+                }
+            } else {
+                currentStreak = 1
+            }
+            lastDate = date
+        }
+
+        return max(bestStreak, currentStreak)
+    }
+
+    // Calculate completion rate
+    func completionRate() -> (percent: Int, count: Int, total: Int) {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let start = calendar.startOfDay(for: createdAt)
+
+        let components = calendar.dateComponents([.day], from: start, to: today)
+        let totalDays = max(1, (components.day ?? 0) + 1)  // Include today
+
+        let completedCount = completions.count
+        let percent = Int((Double(completedCount) / Double(totalDays)) * 100)
+
+        return (percent, completedCount, totalDays)
+    }
 }

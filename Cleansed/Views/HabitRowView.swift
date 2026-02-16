@@ -47,76 +47,85 @@ struct HabitRowView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
+            // Top Row: Name and Streak
             HStack {
                 Text(habit.name)
-                    .font(.headline)
+                    .font(.title2)
+                    .fontWeight(.medium)
 
                 Spacer()
 
-                // Current streak
-                HStack(spacing: 4) {
-                    Image(systemName: "flame.fill")
-                        .foregroundStyle(.orange)
-                        .imageScale(.small)
-                    Text("\(habit.calculateStreak())")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                }
+                Text("\(habit.calculateStreak()) day streak")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
 
-            // 7-day visualization
-            HStack(spacing: 8) {
+            // Bottom Row: Week Days
+            HStack(spacing: 0) {
                 ForEach(last7Days, id: \.self) { date in
-                    DaySquareView(
+                    DayCircleView(
                         date: date,
                         isCompleted: isDateCompleted(date),
+                        state: getDayState(for: date),
                         onTap: {
                             withAnimation(.spring(response: 0.3)) {
                                 toggleCompletion(for: date)
                             }
                         }
                     )
+                    .frame(maxWidth: .infinity)
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 12)
+    }
+
+    // Helper to determine day state
+    private func getDayState(for date: Date) -> DayState {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(date) {
+            return .today
+        } else if date > Date() {
+            return .future
+        } else {
+            return .past
+        }
     }
 }
 
-struct DaySquareView: View {
+enum DayState {
+    case past, today, future
+}
+
+struct DayCircleView: View {
     let date: Date
     let isCompleted: Bool
+    let state: DayState
     let onTap: () -> Void
 
     private var dayLabel: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "E"
+        formatter.dateFormat = "E"  // M, T, W etc.
         return String(formatter.string(from: date).prefix(1))
     }
 
     var body: some View {
-        VStack(spacing: 4) {
-            Text(dayLabel)
-                .font(.caption2)
-                .foregroundStyle(Color(.secondaryLabel))
+        Button(action: onTap) {
+            VStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(isCompleted ? Color.primary : Color.clear)
+                        .frame(width: 44, height: 44)  // Bigger circles as per design
 
-            RoundedRectangle(cornerRadius: 6)
-                .fill(isCompleted ? Color.accentColor : Color(.systemGray5))
-                .frame(width: 32, height: 32)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .strokeBorder(Color(.systemGray4), lineWidth: isCompleted ? 0 : 1)
-                )
-                .overlay(
-                    Image(systemName: "checkmark")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.white)
-                        .opacity(isCompleted ? 1 : 0)
-                )
+                    Text(dayLabel)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(isCompleted ? Color(.systemBackground) : Color.primary)
+                }
+            }
         }
-        .onTapGesture(perform: onTap)
+        .buttonStyle(.plain)
+        .disabled(state == .future)  // Prevent tapping future dates?
     }
 }
 
@@ -127,17 +136,6 @@ struct DaySquareView: View {
 
     let habit = Habit(name: "Read")
     container.mainContext.insert(habit)
-
-    // Add some sample completions
-    let calendar = Calendar.current
-    let today = calendar.startOfDay(for: Date())
-    let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
-
-    let completion1 = HabitCompletion(date: today, habit: habit)
-    let completion2 = HabitCompletion(date: yesterday, habit: habit)
-
-    container.mainContext.insert(completion1)
-    container.mainContext.insert(completion2)
 
     return List {
         HabitRowView(habit: habit)

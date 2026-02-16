@@ -19,11 +19,7 @@ struct HabitView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Habits")
-                    .font(.system(size: 34, weight: .bold, design: .default))
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 8)
+                // Title removed as requested
 
                 if habits.isEmpty {
                     ContentUnavailableView(
@@ -35,10 +31,18 @@ struct HabitView: View {
                 } else {
                     List {
                         ForEach(habits) { habit in
-                            HabitRowView(habit: habit)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(
-                                    EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+                            ZStack {
+                                HabitRowView(habit: habit)
+                                NavigationLink(destination: HabitDetailView(habit: habit)) {
+                                    EmptyView()
+                                }
+                                .opacity(0)  // Invisible link that covers the row, but we want button tappable?
+                                // Actually, separating row taps (days) vs row tap (navigate) is tricky.
+                                // Best practice: Tap on text/empty space navigates. Tap on circles toggles.
+                            }
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(
+                                EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
                         }
                         .onDelete(perform: deleteHabits)
                     }

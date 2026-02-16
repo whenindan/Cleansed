@@ -23,11 +23,7 @@ struct FocusView: View {
             Color(.systemBackground).ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("Focus")
-                    .font(.system(size: 34, weight: .bold, design: .default))
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 8)
+                // Title removed as requested
 
                 Form {
                     Section {
