@@ -50,6 +50,7 @@ struct TodoView: View {
                         }
                         .onDelete(perform: deleteTodos)
                     }
+                    .padding(.top, 24)
                     .hideListSeparators()
                 }
             }
@@ -91,7 +92,7 @@ struct TodoView: View {
                     isFocused = true
                 }
             }
-            .presentationDetents([.medium])
+            .presentationDetents([.height(180)])
         }
     }
 

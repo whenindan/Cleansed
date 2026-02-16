@@ -7,36 +7,86 @@ struct HabitDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: 32) {
                 // Header Stats
-                HStack(spacing: 20) {
-                    StatBox(
-                        title: "Current streak", value: "\(habit.calculateStreak()) days",
-                        icon: "flame.fill", iconColor: .orange, isHighlighted: true)
-                }
-                .padding(.horizontal)
+                VStack(spacing: 24) {
+                    // Current Streak
+                    HStack {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Current streak")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
 
-                HStack(spacing: 20) {
-                    StatBox(
-                        title: "Best streak", value: "\(habit.calculateBestStreak()) days",
-                        icon: nil, iconColor: .white, isHighlighted: false)
+                            Text("\(habit.calculateStreak()) days")
+                                .font(.system(size: 42, weight: .medium, design: .default))
+                                .foregroundStyle(.white)
+                        }
 
-                    let completion = habit.completionRate()
-                    StatBox(
-                        title: "Completion", value: "\(completion.percent)%",
-                        suffix: "\(completion.count) of \(completion.total) days", icon: nil,
-                        iconColor: .white, isHighlighted: false)
+                        Spacer()
+
+                        if habit.calculateStreak() > 0 {
+                            HStack(spacing: 4) {
+                                Text("You're on fire")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                Image(systemName: "flame.fill")
+                                    .foregroundStyle(.orange)
+                            }
+                        }
+                    }
+
+                    // Best Streak
+                    HStack {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Best streak")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+
+                            Text("\(habit.calculateBestStreak()) days")
+                                .font(.system(size: 42, weight: .medium, design: .default))
+                                .foregroundStyle(.white)
+                        }
+
+                        Spacer()
+
+                        if habit.calculateBestStreak() > 0 {
+                            Text("Well done!")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    // Completion Rate
+                    HStack {
+                        let completion = habit.completionRate()
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Completion")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+
+                            Text("\(completion.percent)%")
+                                .font(.system(size: 42, weight: .medium, design: .default))
+                                .foregroundStyle(.white)
+                        }
+
+                        Spacer()
+
+                        Text("\(completion.count) of \(completion.total) days")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .padding(.horizontal)
 
                 // Calendar Grid
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 20) {
                     Text(Date().formatted(.dateTime.month(.wide).year()))
                         .font(.headline)
+                        .foregroundStyle(.secondary)
                         .padding(.horizontal)
 
                     LazyVGrid(
-                        columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 12
+                        columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 16
                     ) {
                         ForEach(["M", "T", "W", "T", "F", "S", "S"], id: \.self) { day in
                             Text(day)
@@ -44,10 +94,19 @@ struct HabitDetailView: View {
                                 .foregroundStyle(.secondary)
                         }
 
-                        // Placeholder for actual calendar logic - simpler implementation for now
-                        // In a real app, we'd calculate exact days offset
-                        ForEach(1...30, id: \.self) { day in
-                            CalendarDayCell(day: day, isCompleted: isDayCompleted(day))
+                        // Calendar Days
+                        let daysInMonth = getDaysInCurrentMonth()
+                        ForEach(daysInMonth, id: \.date) { day in
+                            if day.day == 0 {
+                                Color.clear
+                                    .frame(height: 40)
+                            } else {
+                                CalendarDayCell(
+                                    day: day.day,
+                                    isCompleted: isDateCompleted(day.date),
+                                    isToday: Calendar.current.isDateInToday(day.date)
+                                )
+                            }
                         }
                     }
                     .padding(.horizontal)
@@ -62,89 +121,85 @@ struct HabitDetailView: View {
                 Button {
                     // Menu action placeholder
                 } label: {
-                    Image(systemName: "ellipsis")
+                    Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(.white)
                 }
             }
         }
     }
 
-    // Helper for demo purposes - relies on simple check
-    func isDayCompleted(_ day: Int) -> Bool {
-        // This is a simplified check. In production, match actual dates.
-        // For now, let's just check if we have any completion on this 'day' number of current month
+    // MARK: - Calendar Logic
+
+    struct CalendarDay {
+        let day: Int
+        let date: Date
+    }
+
+    func getDaysInCurrentMonth() -> [CalendarDay] {
         let calendar = Calendar.current
         let today = Date()
-        // This is tricky without full calendar logic, so for the UI demo we might simplify or check actual logic
-        // Let's use the actual data if possible, but mapping "day 1..30" to dates is complex in a quick view.
-        // For this task, getting the UI structure is priority.
-        return false
-    }
-}
 
-struct StatBox: View {
-    let title: String
-    let value: String
-    var suffix: String? = nil
-    let icon: String?
-    let iconColor: Color
-    let isHighlighted: Bool
+        guard let range = calendar.range(of: .day, in: .month, for: today),
+            let firstDayOfMonth = calendar.date(
+                from: calendar.dateComponents([.year, .month], from: today))
+        else {
+            return []
+        }
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        // Calculate offset for the first day of the week (assuming Monday start like screenshot)
+        //Weekday returns 1 for Sunday, 2 for Monday... so Monday(2) needs 0 offset.
+        let firstWeekday = calendar.component(.weekday, from: firstDayOfMonth)
+        // Convert to 0 (Mon) - 6 (Sun)
+        // 1(Sun) -> 6
+        // 2(Mon) -> 0
+        let offset = (firstWeekday + 5) % 7
 
-            HStack(alignment: .firstTextBaseline) {
-                Text(value)
-                    .font(.title)
-                    .fontWeight(.bold)
+        var days: [CalendarDay] = []
 
-                if let suffix = suffix {
-                    Spacer()
-                    Text(suffix)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
+        // Add empty placeholders
+        for _ in 0..<offset {
+            days.append(CalendarDay(day: 0, date: Date.distantPast))
+        }
 
-            if let icon = icon {
-                HStack {
-                    Spacer()
-                    if isHighlighted {
-                        Text("You're on fire")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Image(systemName: icon)
-                        .foregroundStyle(iconColor)
-                }
+        // Add actual days
+        for day in range {
+            if let date = calendar.date(byAdding: .day, value: day - 1, to: firstDayOfMonth) {
+                days.append(CalendarDay(day: day, date: date))
             }
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemBackground))  // slightly lighter than black
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+        return days
+    }
+
+    func isDateCompleted(_ date: Date) -> Bool {
+        let calendar = Calendar.current
+        return habit.completions.contains { completion in
+            calendar.isDate(completion.date, inSameDayAs: date)
+        }
     }
 }
 
 struct CalendarDayCell: View {
     let day: Int
     let isCompleted: Bool
+    let isToday: Bool
 
     var body: some View {
         ZStack {
             if isCompleted {
                 Circle()
-                    .fill(Color.primary)
+                    .fill(Color.white)
+            } else if isToday {
+                Circle()
+                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
             } else {
                 Circle()
                     .fill(Color.clear)
             }
 
             Text("\(day)")
-                .foregroundStyle(isCompleted ? Color(.systemBackground) : Color.primary)
-                .font(.subheadline)
+                .foregroundStyle(isCompleted ? Color.black : Color.white)
+                .font(.system(size: 16, weight: .medium))
         }
         .frame(height: 40)
     }

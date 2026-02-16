@@ -86,7 +86,7 @@ struct HabitView: View {
                     isFocused = true
                 }
             }
-            .presentationDetents([.medium])
+            .presentationDetents([.height(180)])
         }
     }
 
