@@ -4,6 +4,7 @@ import SwiftUI
 struct HabitDetailView: View {
     let habit: Habit
     @Environment(\.dismiss) private var dismiss
+    @State private var selectedMonth: Date = Date()
 
     var body: some View {
         ScrollView {
@@ -66,23 +67,41 @@ struct HabitDetailView: View {
 
                 // Calendar Grid
                 VStack(alignment: .leading, spacing: 20) {
-                    Text(Date().formatted(.dateTime.month(.wide).year()))
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal)
+                    // Month navigation
+                    HStack {
+                        Button(action: previousMonth) {
+                            Image(systemName: "chevron.left")
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        Text(selectedMonth.formatted(.dateTime.month(.wide).year()))
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+
+                        Spacer()
+
+                        Button(action: nextMonth) {
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.horizontal)
 
                     LazyVGrid(
                         columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 16
                     ) {
-                        ForEach(["M", "T", "W", "T", "F", "S", "S"], id: \.self) { day in
+                        // Day labels with unique IDs
+                        ForEach(Array(dayLabels.enumerated()), id: \.offset) { index, day in
                             Text(day)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
 
                         // Calendar Days
-                        let daysInMonth = getDaysInCurrentMonth()
-                        ForEach(daysInMonth, id: \.date) { day in
+                        let daysInMonth = getDaysInMonth(for: selectedMonth)
+                        ForEach(daysInMonth) { day in
                             if day.day == 0 {
                                 Color.clear
                                     .frame(height: 40)
@@ -106,24 +125,39 @@ struct HabitDetailView: View {
 
     // MARK: - Calendar Logic
 
-    struct CalendarDay {
+    private let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
+
+    private func previousMonth() {
+        let calendar = Calendar.current
+        if let newMonth = calendar.date(byAdding: .month, value: -1, to: selectedMonth) {
+            selectedMonth = newMonth
+        }
+    }
+
+    private func nextMonth() {
+        let calendar = Calendar.current
+        if let newMonth = calendar.date(byAdding: .month, value: 1, to: selectedMonth) {
+            selectedMonth = newMonth
+        }
+    }
+
+    struct CalendarDay: Identifiable {
+        let id: UUID = UUID()
         let day: Int
         let date: Date
     }
 
-    func getDaysInCurrentMonth() -> [CalendarDay] {
+    func getDaysInMonth(for month: Date) -> [CalendarDay] {
         let calendar = Calendar.current
-        let today = Date()
 
-        guard let range = calendar.range(of: .day, in: .month, for: today),
+        guard let range = calendar.range(of: .day, in: .month, for: month),
             let firstDayOfMonth = calendar.date(
-                from: calendar.dateComponents([.year, .month], from: today))
+                from: calendar.dateComponents([.year, .month], from: month))
         else {
             return []
         }
 
-        // Calculate offset for the first day of the week (assuming Monday start like screenshot)
-        //Weekday returns 1 for Sunday, 2 for Monday... so Monday(2) needs 0 offset.
+        // Calculate offset for the first day of the week (assuming Monday start)
         let firstWeekday = calendar.component(.weekday, from: firstDayOfMonth)
         // Convert to 0 (Mon) - 6 (Sun)
         // 1(Sun) -> 6
@@ -132,7 +166,7 @@ struct HabitDetailView: View {
 
         var days: [CalendarDay] = []
 
-        // Add empty placeholders
+        // Add empty placeholders with unique IDs
         for _ in 0..<offset {
             days.append(CalendarDay(day: 0, date: Date.distantPast))
         }
