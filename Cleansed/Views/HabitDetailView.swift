@@ -4,7 +4,11 @@ import SwiftUI
 struct HabitDetailView: View {
     let habit: Habit
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @State private var selectedMonth: Date = Date()
+
+    // TEST MODE: Set to true to enable calendar editing for testing
+    private let enableCalendarEditing = true
 
     var body: some View {
         ScrollView {
@@ -109,7 +113,11 @@ struct HabitDetailView: View {
                                 CalendarDayCell(
                                     day: day.day,
                                     isCompleted: isDateCompleted(day.date),
-                                    isToday: Calendar.current.isDateInToday(day.date)
+                                    isToday: Calendar.current.isDateInToday(day.date),
+                                    onTap: enableCalendarEditing
+                                        ? {
+                                            toggleCompletion(for: day.date)
+                                        } : nil
                                 )
                             }
                         }
@@ -139,6 +147,26 @@ struct HabitDetailView: View {
         if let newMonth = calendar.date(byAdding: .month, value: 1, to: selectedMonth) {
             selectedMonth = newMonth
         }
+    }
+
+    private func toggleCompletion(for date: Date) {
+        let calendar = Calendar.current
+        let targetDay = calendar.startOfDay(for: date)
+
+        // Check if already completed
+        if let existingCompletion = habit.completions.first(where: { completion in
+            calendar.startOfDay(for: completion.date) == targetDay
+        }) {
+            // Remove completion
+            modelContext.delete(existingCompletion)
+        } else {
+            // Add completion
+            let newCompletion = HabitCompletion(date: targetDay, habit: habit)
+            modelContext.insert(newCompletion)
+            habit.completions.append(newCompletion)
+        }
+
+        try? modelContext.save()
     }
 
     struct CalendarDay: Identifiable {
@@ -193,24 +221,35 @@ struct CalendarDayCell: View {
     let day: Int
     let isCompleted: Bool
     let isToday: Bool
+    let onTap: (() -> Void)?
 
     var body: some View {
-        ZStack {
-            if isCompleted {
-                Circle()
-                    .fill(Color.primary)
-            } else if isToday {
-                Circle()
-                    .stroke(Color.primary.opacity(0.3), lineWidth: 1)
-            } else {
-                Circle()
-                    .fill(Color.clear)
+        Button(action: {
+            if let onTap = onTap {
+                withAnimation(.spring(response: 0.3)) {
+                    onTap()
+                }
             }
+        }) {
+            ZStack {
+                if isCompleted {
+                    Circle()
+                        .fill(Color.primary)
+                } else if isToday {
+                    Circle()
+                        .stroke(Color.primary.opacity(0.3), lineWidth: 1)
+                } else {
+                    Circle()
+                        .fill(Color.clear)
+                }
 
-            Text("\(day)")
-                .foregroundStyle(isCompleted ? Color(.systemBackground) : Color.primary)
-                .font(.system(size: 16, weight: .medium))
+                Text("\(day)")
+                    .foregroundStyle(isCompleted ? Color(.systemBackground) : Color.primary)
+                    .font(.system(size: 16, weight: .medium))
+            }
+            .frame(height: 40)
         }
-        .frame(height: 40)
+        .buttonStyle(.plain)
+        .disabled(onTap == nil)
     }
 }

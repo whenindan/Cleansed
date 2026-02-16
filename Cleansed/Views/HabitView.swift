@@ -14,6 +14,7 @@ struct HabitView: View {
 
     @State private var isAddSheetPresented = false
     @State private var newHabitName = ""
+    @State private var newHabitStartDate = Date()
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -43,7 +44,12 @@ struct HabitView: View {
                                 }
                                 .listRowSeparator(.hidden)
                                 .listRowInsets(
-                                    EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+                                    EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20)
+                                )
+                                .listRowBackground(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color(.systemBackground))
+                                )
                             }
                             .onDelete(perform: deleteHabits)
                         }
@@ -60,11 +66,20 @@ struct HabitView: View {
             .sheet(isPresented: $isAddSheetPresented) {
                 NavigationStack {
                     Form {
-                        TextField("Habit Name", text: $newHabitName)
-                            .focused($isFocused)
-                            .onSubmit {
-                                addHabit()
-                            }
+                        Section {
+                            TextField("Habit Name", text: $newHabitName)
+                                .focused($isFocused)
+                                .onSubmit {
+                                    addHabit()
+                                }
+
+                            DatePicker(
+                                "Start Date",
+                                selection: $newHabitStartDate,
+                                in: ...Date(),
+                                displayedComponents: .date
+                            )
+                        }
                     }
                     .navigationTitle("New Habit")
                     .navigationBarTitleDisplayMode(.inline)
@@ -73,6 +88,7 @@ struct HabitView: View {
                             Button("Cancel") {
                                 isAddSheetPresented = false
                                 newHabitName = ""
+                                newHabitStartDate = Date()
                             }
                         }
                         ToolbarItem(placement: .confirmationAction) {
@@ -88,7 +104,7 @@ struct HabitView: View {
                         isFocused = true
                     }
                 }
-                .presentationDetents([.height(180)])
+                .presentationDetents([.height(240)])
             }
         }
     }
@@ -97,11 +113,12 @@ struct HabitView: View {
         let trimmedName = newHabitName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return }
 
-        let newHabit = Habit(name: trimmedName)
+        let newHabit = Habit(name: trimmedName, startDate: newHabitStartDate)
         modelContext.insert(newHabit)
         try? modelContext.save()
 
         newHabitName = ""
+        newHabitStartDate = Date()
         isAddSheetPresented = false
     }
 

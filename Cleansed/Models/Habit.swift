@@ -13,14 +13,16 @@ final class Habit {
     var id: UUID
     var name: String
     var createdAt: Date
+    var startDate: Date
 
     @Relationship(deleteRule: .cascade, inverse: \HabitCompletion.habit)
     var completions: [HabitCompletion] = []
 
-    init(name: String) {
+    init(name: String, startDate: Date = Date()) {
         self.id = UUID()
         self.name = name
         self.createdAt = Date()
+        self.startDate = startDate
     }
 
     // Helper to get completions for the last 7 days
@@ -86,7 +88,7 @@ final class Habit {
     func completionRate() -> (percent: Int, count: Int, total: Int) {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        let start = calendar.startOfDay(for: createdAt)
+        let start = calendar.startOfDay(for: startDate)
 
         let components = calendar.dateComponents([.day], from: start, to: today)
         let totalDays = max(1, (components.day ?? 0) + 1)  // Include today
