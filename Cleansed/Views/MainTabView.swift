@@ -8,29 +8,41 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @State private var selectedTab = 0
+
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             TodoView()
                 .tabItem {
                     Label("Todos", systemImage: "list.bullet")
                 }
+                .tag(0)
 
             HabitView()
                 .tabItem {
                     Label("Habits", systemImage: "square.grid.2x2")
                 }
+                .tag(1)
 
             FocusView()
                 .tabItem {
                     Label("Focus", systemImage: "hourglass")
                 }
+                .tag(2)
 
             AccountView()
                 .tabItem {
                     Label("Account", systemImage: "person.circle")
                 }
+                .tag(3)
         }
         .tint(Color.primary)  // Black in Light, White in Dark
+        .onOpenURL { url in
+            // Handle deep linking from widget
+            if url.scheme == "cleansed", url.host == "todos" {
+                selectedTab = 0
+            }
+        }
     }
 }
 

@@ -10,6 +10,7 @@ import SwiftUI
 
 struct TodoView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \TodoItem.createdAt, order: .reverse) private var todos: [TodoItem]
 
     @State private var isAddSheetPresented = false
@@ -34,6 +35,7 @@ struct TodoView: View {
                             Button {
                                 todo.isCompleted.toggle()
                                 try? modelContext.save()
+                                TodoManager.shared.syncTodosToUserDefaults(todos)
                             } label: {
                                 Text(todo.title)
                                     .font(.system(size: 18, weight: .regular, design: .default))
@@ -55,6 +57,23 @@ struct TodoView: View {
                 }
             }
             .background(Color(.systemBackground))
+            .onChange(of: todos) { _, newTodos in
+                // Sync todos to UserDefaults for widget access
+                TodoManager.shared.syncTodosToUserDefaults(newTodos)
+            }
+            .onAppear {
+                // Sync todos to UserDefaults for widget
+                TodoManager.shared.syncTodosToUserDefaults(todos)
+
+                // Sync changes from widget back to app
+                syncFromWidget()
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    // Sync widget changes back to app when returning to foreground
+                    syncFromWidget()
+                }
+            }
 
             // FAB
             FAB {
@@ -116,6 +135,23 @@ struct TodoView: View {
         for index in offsets {
             modelContext.delete(todos[index])
         }
+        try? modelContext.save()
+    }
+
+    private func syncFromWidget() {
+        // Get todos from UserDefaults (updated by widget)
+        let widgetTodos = TodoManager.shared.getTodosFromUserDefaults()
+
+        // Update SwiftData todos to match widget changes
+        for widgetTodo in widgetTodos {
+            if let existingTodo = todos.first(where: { $0.id == widgetTodo.id }) {
+                // Update completion status if it changed
+                if existingTodo.isCompleted != widgetTodo.isCompleted {
+                    existingTodo.isCompleted = widgetTodo.isCompleted
+                }
+            }
+        }
+
         try? modelContext.save()
     }
 }
