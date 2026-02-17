@@ -85,6 +85,10 @@ struct TodoWidgetEntryView: View {
             return 3
         case .systemMedium:
             return 6
+        case .systemLarge:
+            return 12
+        case .systemExtraLarge:
+            return 20
         default:
             return 3
         }
@@ -128,7 +132,7 @@ struct TodoWidget: Widget {
         StaticConfiguration(kind: kind, provider: TodoProvider()) { entry in
             TodoWidgetEntryView(entry: entry)
         }
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
         .configurationDisplayName("Todo List")
         .description("View and complete your todos from the home screen")
     }
