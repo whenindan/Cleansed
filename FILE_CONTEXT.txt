@@ -1,0 +1,25 @@
+CLEANSED APP - FILE CONTEXT
+
+ENTRY POINT
+- CleansedApp.swift: Main app file. Sets up SwiftData container, migration, and theme.
+
+MODELS (Data Structures)
+- Models/Habit.swift: Core Habit entity. Logic for streaks, completion rates, start dates.
+- Models/HabitCompletion.swift: Records when a habit was done.
+- Models/TodoItem.swift: Simple task entity (title, isCompleted).
+- Models/FocusSchedule.swift: Data for focus scheduling.
+
+VIEWS (UI)
+- Views/MainTabView.swift: Tab bar controller.
+- Views/TodoView.swift: Task list interface.
+- Views/HabitView.swift: Habit dashboard. Shows list of habits.
+- Views/HabitRowView.swift: Individual row for a habit. Shows last 7 days.
+- Views/HabitDetailView.swift: Detailed stats & monthly calendar for a habit.
+- Views/FocusView.swift: Interface for scheduling focus windows.
+- Views/Account/AccountView.swift: Settings & theme toggle.
+
+VIEW MODELS (Logic)
+- ViewModels/FocusManager.swift: Logic for focus mode scheduling & status.
+
+DESIGN SYSTEM
+- DesignSystem.swift: Reusable components (FAB, Checkbox) & modifiers.
