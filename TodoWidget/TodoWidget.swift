@@ -95,14 +95,23 @@ struct TodoWidgetEntryView: View {
 struct TodoRowView: View {
     let todo: TodoItemData
 
+    private var styledTitle: AttributedString {
+        var attr = AttributedString(todo.title)
+        if todo.isCompleted {
+            attr.strikethroughStyle = .single
+            attr.foregroundColor = .secondary
+        } else {
+            attr.foregroundColor = .primary
+        }
+        return attr
+    }
+
     var body: some View {
         Button(intent: ToggleTodoIntent(todoId: todo.id.uuidString)) {
             HStack {
-                Text(todo.title)
+                Text(styledTitle)
                     .font(.system(size: 13))
                     .lineLimit(1)
-                    .strikethrough(todo.isCompleted, color: .secondary)
-                    .foregroundColor(todo.isCompleted ? .secondary : .primary)
 
                 Spacer(minLength: 0)
             }
