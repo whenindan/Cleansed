@@ -19,6 +19,10 @@ struct AccountView: View {
                     NavigationLink(destination: SettingsView()) {
                         Label("Settings", systemImage: "gear")
                     }
+
+                    NavigationLink(destination: WidgetSettingsView()) {
+                        Label("Widget", systemImage: "square.stack.3d.up.fill")
+                    }
                 } header: {
                     Text("Settings")
                 }

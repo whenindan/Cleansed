@@ -67,6 +67,7 @@
 				Intents/ToggleTodoIntent.swift,
 				Managers/TodoManager.swift,
 				Models/TodoItem.swift,
+				Models/WidgetSettings.swift,
 			);
 			target = FDFA88A62F44B14500792EFD /* TodoWidgetExtension */;
 		};

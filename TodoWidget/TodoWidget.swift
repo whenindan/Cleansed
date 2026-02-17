@@ -44,13 +44,15 @@ struct TodoProvider: TimelineProvider {
     }
 }
 
-// MARK: - Widget View
+// MARK: - Widget Entry View
 struct TodoWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
     var entry: TodoProvider.Entry
 
+    let settings = WidgetSettings.shared
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: currentAlignment, spacing: currentTodosSpacing) {
             // Todo items
             if entry.todos.isEmpty {
                 Spacer()
@@ -68,15 +70,91 @@ struct TodoWidgetEntryView: View {
                 let displayTodos = Array(entry.todos.prefix(maxTodos))
 
                 ForEach(displayTodos, id: \.id) { todo in
-                    TodoRowView(todo: todo)
+                    TodoRowView(todo: todo, family: family)
                 }
 
                 Spacer()
             }
         }
-        .padding(12)
-        .containerBackground(.fill.tertiary, for: .widget)
+        .padding(.horizontal, currentHorizontalPadding)
+        .padding(.vertical, currentVerticalPadding)
+        .containerBackground(
+            currentUseCustomBackground
+                ? AnyShapeStyle(currentBackgroundColor)
+                : AnyShapeStyle(.fill.tertiary),
+            for: .widget
+        )
         .widgetURL(URL(string: "cleansed://todos"))
+    }
+
+    // MARK: - Size-Specific Settings
+
+    private var currentAlignment: HorizontalAlignment {
+        switch family {
+        case .systemSmall:
+            return WidgetSettings.SmallWidgetSettings.alignment
+        case .systemMedium:
+            return WidgetSettings.MediumWidgetSettings.alignment
+        default:  // .systemLarge
+            return settings.textAlignment
+        }
+    }
+
+    private var currentTodosSpacing: CGFloat {
+        switch family {
+        case .systemSmall:
+            return WidgetSettings.SmallWidgetSettings.todosSpacing
+        case .systemMedium:
+            return WidgetSettings.MediumWidgetSettings.todosSpacing
+        default:
+            return CGFloat(settings.todosSpacing)
+        }
+    }
+
+    private var currentHorizontalPadding: CGFloat {
+        switch family {
+        case .systemSmall:
+            return WidgetSettings.SmallWidgetSettings.horizontalPadding
+        case .systemMedium:
+            return WidgetSettings.MediumWidgetSettings.horizontalPadding
+        default:
+            return CGFloat(settings.horizontalPadding)
+        }
+    }
+
+    private var currentVerticalPadding: CGFloat {
+        switch family {
+        case .systemSmall:
+            return WidgetSettings.SmallWidgetSettings.verticalPadding
+        case .systemMedium:
+            return WidgetSettings.MediumWidgetSettings.verticalPadding
+        default:
+            return CGFloat(settings.verticalPadding)
+        }
+    }
+
+    private var currentUseCustomBackground: Bool {
+        switch family {
+        case .systemSmall:
+            return WidgetSettings.SmallWidgetSettings.useCustomBackground
+        case .systemMedium:
+            return WidgetSettings.MediumWidgetSettings.useCustomBackground
+        default:
+            return settings.useCustomBackground
+        }
+    }
+
+    private var currentBackgroundColor: Color {
+        switch family {
+        case .systemSmall:
+            return Color(hex: WidgetSettings.SmallWidgetSettings.backgroundColor)
+                ?? Color(UIColor.systemBackground)
+        case .systemMedium:
+            return Color(hex: WidgetSettings.MediumWidgetSettings.backgroundColor)
+                ?? Color(UIColor.systemBackground)
+        default:
+            return settings.backgroundColorValue
+        }
     }
 
     private var maxTodos: Int {
@@ -98,9 +176,12 @@ struct TodoWidgetEntryView: View {
 // MARK: - Todo Row View
 struct TodoRowView: View {
     let todo: TodoItemData
+    let family: WidgetFamily
+    let settings = WidgetSettings.shared
 
     private var styledTitle: AttributedString {
-        var attr = AttributedString(todo.title)
+        let title = currentIsLowercase ? todo.title.lowercased() : todo.title
+        var attr = AttributedString(title)
         if todo.isCompleted {
             attr.strikethroughStyle = .single
             attr.foregroundColor = .secondary
@@ -110,11 +191,33 @@ struct TodoRowView: View {
         return attr
     }
 
+    private var currentIsLowercase: Bool {
+        switch family {
+        case .systemSmall:
+            return WidgetSettings.SmallWidgetSettings.isLowercase
+        case .systemMedium:
+            return WidgetSettings.MediumWidgetSettings.isLowercase
+        default:
+            return settings.isLowercase
+        }
+    }
+
+    private var currentFontSize: CGFloat {
+        switch family {
+        case .systemSmall:
+            return CGFloat(WidgetSettings.SmallWidgetSettings.fontSize)
+        case .systemMedium:
+            return CGFloat(WidgetSettings.MediumWidgetSettings.fontSize)
+        default:
+            return CGFloat(settings.fontSize)
+        }
+    }
+
     var body: some View {
         Button(intent: ToggleTodoIntent(todoId: todo.id.uuidString)) {
             HStack {
                 Text(styledTitle)
-                    .font(.system(size: 13))
+                    .font(.system(size: currentFontSize))
                     .lineLimit(1)
 
                 Spacer(minLength: 0)
