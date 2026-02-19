@@ -22,9 +22,11 @@ struct TodoProvider: TimelineProvider {
             date: Date(),
             todos: [
                 TodoItemData(
-                    id: UUID(), title: "Sample Todo", isCompleted: false, createdAt: Date()),
+                    id: UUID(), title: "Sample Todo", isCompleted: false, createdAt: Date(),
+                    completedAt: nil, sortDate: Date()),
                 TodoItemData(
-                    id: UUID(), title: "Another Task", isCompleted: false, createdAt: Date()),
+                    id: UUID(), title: "Another Task", isCompleted: false, createdAt: Date(),
+                    completedAt: nil, sortDate: Date()),
             ])
     }
 
@@ -248,15 +250,24 @@ struct TodoWidget: Widget {
     TodoEntry(
         date: .now,
         todos: [
-            TodoItemData(id: UUID(), title: "Buy groceries", isCompleted: false, createdAt: Date()),
-            TodoItemData(id: UUID(), title: "Call mom", isCompleted: false, createdAt: Date()),
-            TodoItemData(id: UUID(), title: "Finish report", isCompleted: true, createdAt: Date()),
+            TodoItemData(
+                id: UUID(), title: "Buy groceries", isCompleted: false, createdAt: Date(),
+                completedAt: nil, sortDate: Date()),
+            TodoItemData(
+                id: UUID(), title: "Call mom", isCompleted: false, createdAt: Date(),
+                completedAt: nil, sortDate: Date()),
+            TodoItemData(
+                id: UUID(), title: "Finish report", isCompleted: true, createdAt: Date(),
+                completedAt: Date(), sortDate: Date()),
         ])
     TodoEntry(
         date: .now,
         todos: [
             TodoItemData(
-                id: UUID(), title: "Morning workout", isCompleted: true, createdAt: Date()),
-            TodoItemData(id: UUID(), title: "Team meeting", isCompleted: false, createdAt: Date()),
+                id: UUID(), title: "Morning workout", isCompleted: true, createdAt: Date(),
+                completedAt: Date(), sortDate: Date()),
+            TodoItemData(
+                id: UUID(), title: "Team meeting", isCompleted: false, createdAt: Date(),
+                completedAt: nil, sortDate: Date()),
         ])
 }

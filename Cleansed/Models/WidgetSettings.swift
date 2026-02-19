@@ -53,11 +53,11 @@ class WidgetSettings {
     /// Small widget settings - CUSTOMIZE THESE VALUES
     struct SmallWidgetSettings {
         static let isLowercase = false
-        static let fontSize = 12
+        static let fontSize = 18
         static let alignment: HorizontalAlignment = .leading
-        static let horizontalPadding: CGFloat = 12
+        static let horizontalPadding: CGFloat = 8
         static let verticalPadding: CGFloat = 8
-        static let todosSpacing: CGFloat = 6
+        static let todosSpacing: CGFloat = 5
         static let useCustomBackground = false
         static let backgroundColor = "#1C1C1E"
     }

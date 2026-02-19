@@ -13,6 +13,26 @@ struct TodoView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \TodoItem.createdAt, order: .reverse) private var todos: [TodoItem]
 
+    /// Incomplete first (Oldest sortDate -> Newest), then Completed (Most recently completed -> Oldest).
+    /// - New items appear at the BOTTOM of Incomplete list (near action area).
+    /// - Unchecked items appear at the BOTTOM of Incomplete list (near where they were clicked).
+    /// - Completed items appear at the TOP of Completed list (near where they were clicked).
+    private var sortedTodos: [TodoItem] {
+        todos.sorted {
+            if $0.isCompleted != $1.isCompleted { return !$0.isCompleted }
+
+            if $0.isCompleted {
+                // Completed: Most recently completed at the top
+                let d0 = $0.completedAt ?? $0.createdAt
+                let d1 = $1.completedAt ?? $1.createdAt
+                return d0 > d1
+            } else {
+                // Incomplete: Oldest sortDate first (New items at bottom)
+                return $0.sortDate < $1.sortDate
+            }
+        }
+    }
+
     @State private var isAddSheetPresented = false
     @State private var newTodoTitle = ""
     @FocusState private var isFocused: Bool
@@ -31,11 +51,19 @@ struct TodoView: View {
                     .frame(maxHeight: .infinity)
                 } else {
                     List {
-                        ForEach(todos) { todo in
+                        ForEach(sortedTodos) { todo in
                             Button {
-                                todo.isCompleted.toggle()
-                                try? modelContext.save()
-                                TodoManager.shared.syncTodosToUserDefaults(todos)
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                                    todo.isCompleted.toggle()
+                                    if todo.isCompleted {
+                                        todo.completedAt = Date()
+                                    } else {
+                                        todo.completedAt = nil
+                                        todo.sortDate = Date()  // Move to bottom of incomplete list
+                                    }
+                                    try? modelContext.save()
+                                    TodoManager.shared.syncTodosToUserDefaults(todos)
+                                }
                             } label: {
                                 Text(todo.title)
                                     .font(.system(size: 18, weight: .regular, design: .default))
@@ -43,7 +71,7 @@ struct TodoView: View {
                                         todo.isCompleted ? Color.secondary : Color.primary
                                     )
                                     .strikethrough(todo.isCompleted, color: Color.secondary)
-                                    .animation(.default, value: todo.isCompleted)
+                                    .animation(.easeInOut(duration: 0.2), value: todo.isCompleted)
                             }
                             .buttonStyle(.plain)
                             .listRowSeparator(.hidden)
@@ -51,7 +79,13 @@ struct TodoView: View {
                                 EdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24))
                         }
                         .onDelete(perform: deleteTodos)
+                        .onMove { from, to in
+                            // no-op: list handles visual move, real order is driven by sort
+                        }
                     }
+                    .animation(
+                        .spring(response: 0.4, dampingFraction: 0.75), value: sortedTodos.map(\.id)
+                    )
                     .padding(.top, 24)
                     .hideListSeparators()
                 }
@@ -120,6 +154,7 @@ struct TodoView: View {
         guard !trimmedTitle.isEmpty else { return }
 
         let newTodo = TodoItem(title: trimmedTitle)
+        // sortDate defaults to Date(), putting it at the bottom
         modelContext.insert(newTodo)
 
         do {
@@ -133,7 +168,7 @@ struct TodoView: View {
 
     private func deleteTodos(at offsets: IndexSet) {
         for index in offsets {
-            modelContext.delete(todos[index])
+            modelContext.delete(sortedTodos[index])
         }
         try? modelContext.save()
     }
@@ -145,9 +180,12 @@ struct TodoView: View {
         // Update SwiftData todos to match widget changes
         for widgetTodo in widgetTodos {
             if let existingTodo = todos.first(where: { $0.id == widgetTodo.id }) {
-                // Update completion status if it changed
+                // Update properties if they changed
                 if existingTodo.isCompleted != widgetTodo.isCompleted {
                     existingTodo.isCompleted = widgetTodo.isCompleted
+                    existingTodo.completedAt = widgetTodo.completedAt
+                    // Also sync sortDate if available (though Widget effectively sets it to Date() on uncheck)
+                    existingTodo.sortDate = widgetTodo.sortDate
                 }
             }
         }

@@ -15,6 +15,8 @@ struct TodoItemData: Codable {
     let title: String
     let isCompleted: Bool
     let createdAt: Date
+    let completedAt: Date?
+    let sortDate: Date
 }
 
 /// Manages synchronization between SwiftData and UserDefaults for widget access
@@ -31,14 +33,17 @@ class TodoManager {
 
     /// Sync todos from SwiftData to UserDefaults for widget access
     func syncTodosToUserDefaults(_ todos: [TodoItem]) {
-        let todoData = todos.map { todo in
-            TodoItemData(
-                id: todo.id,
-                title: todo.title,
-                isCompleted: todo.isCompleted,
-                createdAt: todo.createdAt
-            )
-        }
+        let todoData = sorted(
+            todos.map { todo in
+                TodoItemData(
+                    id: todo.id,
+                    title: todo.title,
+                    isCompleted: todo.isCompleted,
+                    createdAt: todo.createdAt,
+                    completedAt: todo.completedAt,
+                    sortDate: todo.sortDate
+                )
+            })
 
         if let encoded = try? JSONEncoder().encode(todoData) {
             sharedDefaults.set(encoded, forKey: todosKey)
@@ -62,16 +67,49 @@ class TodoManager {
 
         if let index = todos.firstIndex(where: { $0.id == id }) {
             let todo = todos[index]
+            let nowCompleted = !todo.isCompleted
+
+            // If checking (incomplete -> complete): set completedAt = Now
+            // If unchecking (complete -> incomplete): set sortDate = Now (moves to bottom of list)
+            let newCompletedAt = nowCompleted ? Date() : nil
+            let newSortDate = nowCompleted ? todo.sortDate : Date()
+
             todos[index] = TodoItemData(
                 id: todo.id,
                 title: todo.title,
-                isCompleted: !todo.isCompleted,
-                createdAt: todo.createdAt
+                isCompleted: nowCompleted,
+                createdAt: todo.createdAt,
+                completedAt: newCompletedAt,
+                sortDate: newSortDate
             )
 
-            if let encoded = try? JSONEncoder().encode(todos) {
+            if let encoded = try? JSONEncoder().encode(sorted(todos)) {
                 sharedDefaults.set(encoded, forKey: todosKey)
                 reloadWidgets()
+            }
+        }
+    }
+
+    /// Sort todos:
+    /// 1. Incomplete first
+    ///    - Sort by `sortDate` ASCENDING (Oldest first).
+    ///    - New items (created now) -> Bottom.
+    ///    - Unchecked items (sortDate updated to now) -> Bottom.
+    /// 2. Completed last
+    ///    - Sort by `completedAt` DESCENDING (Newest completion first).
+    ///    - Just-completed items -> Top of completed section.
+    private func sorted(_ todos: [TodoItemData]) -> [TodoItemData] {
+        todos.sorted {
+            if $0.isCompleted != $1.isCompleted { return !$0.isCompleted }  // Incomplete first
+
+            if $0.isCompleted {
+                // Completed: Most recently completed at the top
+                let d0 = $0.completedAt ?? $0.createdAt
+                let d1 = $1.completedAt ?? $1.createdAt
+                return d0 > d1
+            } else {
+                // Incomplete: Oldest sortDate first (New items at bottom)
+                return $0.sortDate < $1.sortDate
             }
         }
     }

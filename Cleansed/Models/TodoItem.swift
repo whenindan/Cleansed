@@ -14,11 +14,15 @@ final class TodoItem {
     var title: String
     var isCompleted: Bool
     var createdAt: Date
+    var completedAt: Date?
+    var sortDate: Date = Date()
 
     init(title: String, isCompleted: Bool = false) {
         self.id = UUID()
         self.title = title
         self.isCompleted = isCompleted
         self.createdAt = Date()
+        self.completedAt = nil
+        self.sortDate = Date()
     }
 }
