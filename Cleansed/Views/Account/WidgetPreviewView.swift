@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import WidgetKit
 
 /// Live preview of widget with current settings
 struct WidgetPreviewView: View {
     let settings = WidgetSettings.shared
+    var family: WidgetFamily = .systemLarge
 
     let sampleTodos = [
         ("1 leetcode question", false),
@@ -22,42 +24,81 @@ struct WidgetPreviewView: View {
     ]
 
     var body: some View {
-        VStack(alignment: settings.textAlignment, spacing: CGFloat(settings.todosSpacing)) {
-            ForEach(Array(sampleTodos.prefix(5).enumerated()), id: \.offset) { _, todo in
-                let title = settings.isLowercase ? todo.0.lowercased() : todo.0
+        VStack(
+            alignment: settings.textAlignment(for: family),
+            spacing: settings.todosSpacing(for: family)
+        ) {
+            let maxTodos = promptMaxTodos(for: family)
+            ForEach(Array(sampleTodos.prefix(maxTodos).enumerated()), id: \.offset) { _, todo in
+                let title = settings.isLowercase(for: family) ? todo.0.lowercased() : todo.0
 
                 HStack {
-                    if settings.textAlignment == .center {
+                    if settings.textAlignment(for: family) == .center {
                         Spacer()
                     }
 
                     Text(title)
-                        .font(.system(size: CGFloat(settings.fontSize)))
+                        .font(.system(size: CGFloat(settings.fontSize(for: family))))
                         .lineLimit(1)
                         .strikethrough(todo.1, color: .secondary)
                         .foregroundColor(todo.1 ? .secondary : .primary)
 
-                    if settings.textAlignment == .leading || settings.textAlignment == .center {
+                    if settings.textAlignment(for: family) == .leading
+                        || settings.textAlignment(for: family) == .center
+                    {
                         Spacer(minLength: 0)
                     }
                 }
             }
+            if sampleTodos.count < maxTodos {
+                Spacer()
+            }
         }
-        .padding(.horizontal, CGFloat(settings.horizontalPadding))
-        .padding(.vertical, CGFloat(settings.verticalPadding))
-        .frame(maxWidth: .infinity)
-        .frame(height: 200)
+        .padding(.horizontal, settings.horizontalPadding(for: family))
+        .padding(.vertical, settings.verticalPadding(for: family))
+        .frame(width: width(for: family), height: height(for: family))
         .background(
-            settings.useCustomBackground
-                ? settings.backgroundColorValue
-                : Color(UIColor.systemBackground)
+            settings.useCustomBackground(for: family)
+                ? settings.backgroundColorValue(for: family)
+                : Color.black  // Fallback to black instead of UIColor.systemBackground
         )
         .cornerRadius(20)
         .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
     }
+
+    func width(for family: WidgetFamily) -> CGFloat {
+        switch family {
+        case .systemSmall: return 150
+        case .systemMedium: return 320
+        default: return 320
+        }
+    }
+
+    func height(for family: WidgetFamily) -> CGFloat {
+        switch family {
+        case .systemSmall: return 150
+        case .systemMedium: return 150
+        default: return 320
+        }
+    }
+
+    func promptMaxTodos(for family: WidgetFamily) -> Int {
+        switch family {
+        case .systemSmall: return 3
+        case .systemMedium: return 6
+        default: return 12
+        }
+    }
 }
 
 #Preview {
-    WidgetPreviewView()
-        .padding()
+    VStack {
+        Text("Small")
+        WidgetPreviewView(family: .systemSmall)
+        Text("Medium")
+        WidgetPreviewView(family: .systemMedium)
+        Text("Large")
+        WidgetPreviewView(family: .systemLarge)
+    }
+    .padding()
 }

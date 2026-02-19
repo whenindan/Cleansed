@@ -92,71 +92,27 @@ struct TodoWidgetEntryView: View {
     // MARK: - Size-Specific Settings
 
     private var currentAlignment: HorizontalAlignment {
-        switch family {
-        case .systemSmall:
-            return WidgetSettings.SmallWidgetSettings.alignment
-        case .systemMedium:
-            return WidgetSettings.MediumWidgetSettings.alignment
-        default:  // .systemLarge
-            return settings.textAlignment
-        }
+        return settings.textAlignment(for: family)
     }
 
     private var currentTodosSpacing: CGFloat {
-        switch family {
-        case .systemSmall:
-            return WidgetSettings.SmallWidgetSettings.todosSpacing
-        case .systemMedium:
-            return WidgetSettings.MediumWidgetSettings.todosSpacing
-        default:
-            return CGFloat(settings.todosSpacing)
-        }
+        return settings.todosSpacing(for: family)
     }
 
     private var currentHorizontalPadding: CGFloat {
-        switch family {
-        case .systemSmall:
-            return WidgetSettings.SmallWidgetSettings.horizontalPadding
-        case .systemMedium:
-            return WidgetSettings.MediumWidgetSettings.horizontalPadding
-        default:
-            return CGFloat(settings.horizontalPadding)
-        }
+        return settings.horizontalPadding(for: family)
     }
 
     private var currentVerticalPadding: CGFloat {
-        switch family {
-        case .systemSmall:
-            return WidgetSettings.SmallWidgetSettings.verticalPadding
-        case .systemMedium:
-            return WidgetSettings.MediumWidgetSettings.verticalPadding
-        default:
-            return CGFloat(settings.verticalPadding)
-        }
+        return settings.verticalPadding(for: family)
     }
 
     private var currentUseCustomBackground: Bool {
-        switch family {
-        case .systemSmall:
-            return WidgetSettings.SmallWidgetSettings.useCustomBackground
-        case .systemMedium:
-            return WidgetSettings.MediumWidgetSettings.useCustomBackground
-        default:
-            return settings.useCustomBackground
-        }
+        return settings.useCustomBackground(for: family)
     }
 
     private var currentBackgroundColor: Color {
-        switch family {
-        case .systemSmall:
-            return Color(hex: WidgetSettings.SmallWidgetSettings.backgroundColor)
-                ?? Color(UIColor.systemBackground)
-        case .systemMedium:
-            return Color(hex: WidgetSettings.MediumWidgetSettings.backgroundColor)
-                ?? Color(UIColor.systemBackground)
-        default:
-            return settings.backgroundColorValue
-        }
+        return settings.backgroundColorValue(for: family)
     }
 
     private var maxTodos: Int {
@@ -194,25 +150,11 @@ struct TodoRowView: View {
     }
 
     private var currentIsLowercase: Bool {
-        switch family {
-        case .systemSmall:
-            return WidgetSettings.SmallWidgetSettings.isLowercase
-        case .systemMedium:
-            return WidgetSettings.MediumWidgetSettings.isLowercase
-        default:
-            return settings.isLowercase
-        }
+        return settings.isLowercase(for: family)
     }
 
     private var currentFontSize: CGFloat {
-        switch family {
-        case .systemSmall:
-            return CGFloat(WidgetSettings.SmallWidgetSettings.fontSize)
-        case .systemMedium:
-            return CGFloat(WidgetSettings.MediumWidgetSettings.fontSize)
-        default:
-            return CGFloat(settings.fontSize)
-        }
+        return CGFloat(settings.fontSize(for: family))
     }
 
     var body: some View {

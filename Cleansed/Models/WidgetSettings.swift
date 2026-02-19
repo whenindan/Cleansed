@@ -8,6 +8,12 @@
 import SwiftUI
 import WidgetKit
 
+#if canImport(UIKit)
+    import UIKit
+#elseif canImport(AppKit)
+    import AppKit
+#endif
+
 /// Widget customization settings shared between app and widget
 class WidgetSettings {
     static let shared = WidgetSettings()
@@ -20,110 +26,220 @@ class WidgetSettings {
 
     // MARK: - Settings Properties (Only for Large Widget)
 
-    @AppStorage("widget.isLowercase", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var isLowercase: Bool = false
-
-    @AppStorage("widget.fontSize", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var fontSize: Int = 13
-
-    @AppStorage("widget.alignment", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var alignment: String = "leading"
+    // MARK: - Large Widget Settings
+    @AppStorage(
+        "widget.large.isLowercase", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var largeIsLowercase: Bool = false
 
     @AppStorage(
-        "widget.horizontalPadding", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var horizontalPadding: Int = 12
+        "widget.large.fontSize", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var largeFontSize: Int = 13
 
     @AppStorage(
-        "widget.verticalPadding", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var verticalPadding: Int = 8
-
-    @AppStorage("widget.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var todosSpacing: Int = 8
+        "widget.large.alignment", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var largeAlignment: String = "leading"
 
     @AppStorage(
-        "widget.useCustomBackground", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var useCustomBackground: Bool = false
+        "widget.large.horizontalPadding",
+        store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var largeHorizontalPadding: Int = 12
 
     @AppStorage(
-        "widget.backgroundColor", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var backgroundColor: String = "#1C1C1E"
+        "widget.large.verticalPadding", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var largeVerticalPadding: Int = 8
 
-    // MARK: - Size-Specific Settings (Hardcoded for Manual Testing)
+    @AppStorage(
+        "widget.large.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var largeTodosSpacing: Int = 8
 
-    /// Small widget settings - CUSTOMIZE THESE VALUES
-    struct SmallWidgetSettings {
-        static let isLowercase = false
-        static let fontSize = 18
-        static let alignment: HorizontalAlignment = .leading
-        static let horizontalPadding: CGFloat = 8
-        static let verticalPadding: CGFloat = 8
-        static let todosSpacing: CGFloat = 5
-        static let useCustomBackground = false
-        static let backgroundColor = "#1C1C1E"
-    }
+    @AppStorage(
+        "widget.large.useCustomBackground",
+        store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var largeUseCustomBackground: Bool = false
 
-    /// Medium (horizontal) widget settings - CUSTOMIZE THESE VALUES
-    struct MediumWidgetSettings {
-        static let isLowercase = false
-        static let fontSize = 13
-        static let alignment: HorizontalAlignment = .leading
-        static let horizontalPadding: CGFloat = 14
-        static let verticalPadding: CGFloat = 10
-        static let todosSpacing: CGFloat = 8
-        static let useCustomBackground = false
-        static let backgroundColor = "#1C1C1E"
-    }
+    @AppStorage(
+        "widget.large.backgroundColor", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var largeBackgroundColor: String = "#1C1C1E"
 
-    /// Large widget settings - Uses customizable settings from Account tab
-    var largeWidgetSettings:
-        (
-            isLowercase: Bool,
-            fontSize: Int,
-            alignment: HorizontalAlignment,
-            horizontalPadding: CGFloat,
-            verticalPadding: CGFloat,
-            todosSpacing: CGFloat,
-            useCustomBackground: Bool,
-            backgroundColor: Color
-        )
-    {
-        return (
-            isLowercase: isLowercase,
-            fontSize: fontSize,
-            alignment: textAlignment,
-            horizontalPadding: CGFloat(horizontalPadding),
-            verticalPadding: CGFloat(verticalPadding),
-            todosSpacing: CGFloat(todosSpacing),
-            useCustomBackground: useCustomBackground,
-            backgroundColor: backgroundColorValue
-        )
-    }
+    // MARK: - Medium Widget Settings
+    @AppStorage(
+        "widget.medium.isLowercase", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var mediumIsLowercase: Bool = false
+
+    @AppStorage(
+        "widget.medium.fontSize", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var mediumFontSize: Int = 13
+
+    @AppStorage(
+        "widget.medium.alignment", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var mediumAlignment: String = "leading"
+
+    @AppStorage(
+        "widget.medium.horizontalPadding",
+        store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var mediumHorizontalPadding: Int = 14
+
+    @AppStorage(
+        "widget.medium.verticalPadding", store: UserDefaults(suiteName: "group.com.cleansed.shared")
+    )
+    var mediumVerticalPadding: Int = 10
+
+    @AppStorage(
+        "widget.medium.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var mediumTodosSpacing: Int = 8
+
+    @AppStorage(
+        "widget.medium.useCustomBackground",
+        store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var mediumUseCustomBackground: Bool = false
+
+    @AppStorage(
+        "widget.medium.backgroundColor", store: UserDefaults(suiteName: "group.com.cleansed.shared")
+    )
+    var mediumBackgroundColor: String = "#1C1C1E"
+
+    // MARK: - Small Widget Settings
+    @AppStorage(
+        "widget.small.isLowercase", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var smallIsLowercase: Bool = false
+
+    @AppStorage(
+        "widget.small.fontSize", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var smallFontSize: Int = 18
+
+    @AppStorage(
+        "widget.small.alignment", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var smallAlignment: String = "leading"
+
+    @AppStorage(
+        "widget.small.horizontalPadding",
+        store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var smallHorizontalPadding: Int = 8
+
+    @AppStorage(
+        "widget.small.verticalPadding", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var smallVerticalPadding: Int = 8
+
+    @AppStorage(
+        "widget.small.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var smallTodosSpacing: Int = 5
+
+    @AppStorage(
+        "widget.small.useCustomBackground",
+        store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var smallUseCustomBackground: Bool = false
+
+    @AppStorage(
+        "widget.small.backgroundColor", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var smallBackgroundColor: String = "#1C1C1E"
 
     // MARK: - Computed Properties
 
-    var textAlignment: HorizontalAlignment {
-        switch alignment {
+    func textAlignment(for family: WidgetFamily) -> HorizontalAlignment {
+        let alignString: String
+        switch family {
+        case .systemSmall: alignString = smallAlignment
+        case .systemMedium: alignString = mediumAlignment
+        default: alignString = largeAlignment
+        }
+
+        switch alignString {
         case "center": return .center
         case "trailing": return .trailing
         default: return .leading
         }
     }
 
-    var backgroundColorValue: Color {
-        Color(hex: backgroundColor) ?? Color(UIColor.systemBackground)
+    func backgroundColorValue(for family: WidgetFamily) -> Color {
+        let colorString: String
+        switch family {
+        case .systemSmall: colorString = smallBackgroundColor
+        case .systemMedium: colorString = mediumBackgroundColor
+        default: colorString = largeBackgroundColor
+        }
+        return Color(hex: colorString) ?? Color.black
+    }
+
+    func isLowercase(for family: WidgetFamily) -> Bool {
+        switch family {
+        case .systemSmall: return smallIsLowercase
+        case .systemMedium: return mediumIsLowercase
+        default: return largeIsLowercase
+        }
+    }
+
+    func fontSize(for family: WidgetFamily) -> Int {
+        switch family {
+        case .systemSmall: return smallFontSize
+        case .systemMedium: return mediumFontSize
+        default: return largeFontSize
+        }
+    }
+
+    func horizontalPadding(for family: WidgetFamily) -> CGFloat {
+        switch family {
+        case .systemSmall: return CGFloat(smallHorizontalPadding)
+        case .systemMedium: return CGFloat(mediumHorizontalPadding)
+        default: return CGFloat(largeHorizontalPadding)
+        }
+    }
+
+    func verticalPadding(for family: WidgetFamily) -> CGFloat {
+        switch family {
+        case .systemSmall: return CGFloat(smallVerticalPadding)
+        case .systemMedium: return CGFloat(mediumVerticalPadding)
+        default: return CGFloat(largeVerticalPadding)
+        }
+    }
+
+    func todosSpacing(for family: WidgetFamily) -> CGFloat {
+        switch family {
+        case .systemSmall: return CGFloat(smallTodosSpacing)
+        case .systemMedium: return CGFloat(mediumTodosSpacing)
+        default: return CGFloat(largeTodosSpacing)
+        }
+    }
+
+    func useCustomBackground(for family: WidgetFamily) -> Bool {
+        switch family {
+        case .systemSmall: return smallUseCustomBackground
+        case .systemMedium: return mediumUseCustomBackground
+        default: return largeUseCustomBackground
+        }
     }
 
     // MARK: - Methods
 
     func resetToDefaults() {
-        isLowercase = false
-        fontSize = 13
-        alignment = "leading"
-        horizontalPadding = 12
-        verticalPadding = 8
-        todosSpacing = 8
-        useCustomBackground = false
-        backgroundColor = "#1C1C1E"
+        // Large
+        largeIsLowercase = false
+        largeFontSize = 13
+        largeAlignment = "leading"
+        largeHorizontalPadding = 12
+        largeVerticalPadding = 8
+        largeTodosSpacing = 8
+        largeUseCustomBackground = false
+        largeBackgroundColor = "#1C1C1E"
+
+        // Medium
+        mediumIsLowercase = false
+        mediumFontSize = 13
+        mediumAlignment = "leading"
+        mediumHorizontalPadding = 14
+        mediumVerticalPadding = 10
+        mediumTodosSpacing = 8
+        mediumUseCustomBackground = false
+        mediumBackgroundColor = "#1C1C1E"
+
+        // Small
+        smallIsLowercase = false
+        smallFontSize = 18
+        smallAlignment = "leading"
+        smallHorizontalPadding = 8
+        smallVerticalPadding = 8
+        smallTodosSpacing = 5
+        smallUseCustomBackground = false
+        smallBackgroundColor = "#1C1C1E"
 
         WidgetCenter.shared.reloadAllTimelines()
     }
@@ -159,7 +275,14 @@ extension Color {
     }
 
     func toHex() -> String {
-        guard let components = UIColor(self).cgColor.components else { return "#000000" }
+        #if canImport(UIKit)
+            guard let components = UIColor(self).cgColor.components else { return "#000000" }
+        #elseif canImport(AppKit)
+            guard let components = NSColor(self).cgColor.components else { return "#000000" }
+        #else
+            return "#000000"
+        #endif
+
         let r = Int(components[0] * 255.0)
         let g = Int(components[1] * 255.0)
         let b = Int(components[2] * 255.0)
