@@ -58,11 +58,22 @@ struct WidgetPreviewView: View {
         .padding(.vertical, settings.verticalPadding(for: family))
         .frame(width: width(for: family), height: height(for: family))
         .background(
-            settings.useCustomBackground(for: family)
-                ? settings.backgroundColorValue(for: family)
-                : Color.black  // Fallback to black instead of UIColor.systemBackground
+            Group {
+                if settings.useCustomBackground(for: family) {
+                    settings.backgroundColorValue(for: family)
+                } else {
+                    // Glass effect for default system theme
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+                }
+            }
         )
         .cornerRadius(20)
+        // Add a subtle border to frame the preview
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+        )
         .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
     }
 
