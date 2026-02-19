@@ -5,6 +5,7 @@
 //  Created by Nguyen Trong Dat on 2/17/26.
 //
 
+import AppIntents
 import SwiftUI
 import WidgetKit
 
@@ -287,5 +288,97 @@ extension Color {
         let g = Int(components[1] * 255.0)
         let b = Int(components[2] * 255.0)
         return String(format: "#%02X%02X%02X", r, g, b)
+    }
+}
+
+// MARK: - SHARED WIDGET COMPONENTS
+
+// TodoEntry
+struct TodoEntry: TimelineEntry {
+    let date: Date
+    var todos: [TodoItemData]
+}
+
+// TodoWidgetContentView
+struct TodoWidgetContentView: View {
+    let family: WidgetFamily
+    let entry: TodoEntry
+    let settings = WidgetSettings.shared
+
+    var body: some View {
+        VStack(alignment: currentAlignment, spacing: currentTodosSpacing) {
+            if entry.todos.isEmpty {
+                Spacer()
+                VStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle")
+                        .font(.system(size: 24))
+                        .foregroundColor(.secondary)
+                    Text("All clear!")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                Spacer()
+            } else {
+                let displayTodos = Array(entry.todos.prefix(maxTodos))
+                ForEach(displayTodos, id: \.id) { todo in
+                    TodoRowView(todo: todo, family: family)
+                }
+                Spacer()
+            }
+        }
+        .padding(.horizontal, currentHorizontalPadding)
+        .padding(.vertical, currentVerticalPadding)
+    }
+
+    // Settings Helpers
+    private var currentAlignment: HorizontalAlignment { return settings.textAlignment(for: family) }
+    private var currentTodosSpacing: CGFloat { return settings.todosSpacing(for: family) }
+    private var currentHorizontalPadding: CGFloat { return settings.horizontalPadding(for: family) }
+    private var currentVerticalPadding: CGFloat { return settings.verticalPadding(for: family) }
+
+    private var maxTodos: Int {
+        switch family {
+        case .systemSmall: return 3
+        case .systemMedium: return 6
+        case .systemLarge: return 12
+        case .systemExtraLarge: return 20
+        @unknown default: return 3
+        }
+    }
+}
+
+// TodoRowView
+struct TodoRowView: View {
+    let todo: TodoItemData
+    let family: WidgetFamily
+    let settings = WidgetSettings.shared
+
+    private var styledTitle: AttributedString {
+        let title = settings.isLowercase(for: family) ? todo.title.lowercased() : todo.title
+        var attr = AttributedString(title)
+        if todo.isCompleted {
+            attr.strikethroughStyle = .single
+            attr.foregroundColor = .secondary
+        } else {
+            attr.foregroundColor = .primary
+        }
+        return attr
+    }
+
+    private var currentFontSize: CGFloat {
+        return CGFloat(settings.fontSize(for: family))
+    }
+
+    var body: some View {
+        HStack {
+            Button(intent: ToggleTodoIntent(todoId: todo.id.uuidString)) {
+                Text(styledTitle)
+                    .font(.system(size: currentFontSize))
+                    .lineLimit(1)
+            }
+            .buttonStyle(.plain)
+            Spacer(minLength: 0)
+        }
     }
 }

@@ -10,10 +10,7 @@ import SwiftUI
 import WidgetKit
 
 // MARK: - Timeline Entry
-struct TodoEntry: TimelineEntry {
-    let date: Date
-    var todos: [TodoItemData]
-}
+// TodoEntry is defined in WidgetSettings.swift DO NOT REDEFINE HERE
 
 // MARK: - Timeline Provider
 struct TodoProvider: TimelineProvider {
@@ -54,120 +51,14 @@ struct TodoWidgetEntryView: View {
     let settings = WidgetSettings.shared
 
     var body: some View {
-        VStack(alignment: currentAlignment, spacing: currentTodosSpacing) {
-            // Todo items
-            if entry.todos.isEmpty {
-                Spacer()
-                VStack(spacing: 4) {
-                    Image(systemName: "checkmark.circle")
-                        .font(.system(size: 24))
-                        .foregroundColor(.secondary)
-                    Text("All clear!")
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                Spacer()
-            } else {
-                let displayTodos = Array(entry.todos.prefix(maxTodos))
-
-                ForEach(displayTodos, id: \.id) { todo in
-                    TodoRowView(todo: todo, family: family)
-                }
-
-                Spacer()
-            }
-        }
-        .padding(.horizontal, currentHorizontalPadding)
-        .padding(.vertical, currentVerticalPadding)
-        .containerBackground(
-            currentUseCustomBackground
-                ? AnyShapeStyle(currentBackgroundColor)
-                : AnyShapeStyle(.fill.tertiary),
-            for: .widget
-        )
-        .widgetURL(URL(string: "cleansed://todos"))
-    }
-
-    // MARK: - Size-Specific Settings
-
-    private var currentAlignment: HorizontalAlignment {
-        return settings.textAlignment(for: family)
-    }
-
-    private var currentTodosSpacing: CGFloat {
-        return settings.todosSpacing(for: family)
-    }
-
-    private var currentHorizontalPadding: CGFloat {
-        return settings.horizontalPadding(for: family)
-    }
-
-    private var currentVerticalPadding: CGFloat {
-        return settings.verticalPadding(for: family)
-    }
-
-    private var currentUseCustomBackground: Bool {
-        return settings.useCustomBackground(for: family)
-    }
-
-    private var currentBackgroundColor: Color {
-        return settings.backgroundColorValue(for: family)
-    }
-
-    private var maxTodos: Int {
-        switch family {
-        case .systemSmall:
-            return 3
-        case .systemMedium:
-            return 6
-        case .systemLarge:
-            return 12
-        case .systemExtraLarge:
-            return 20
-        default:
-            return 3
-        }
-    }
-}
-
-// MARK: - Todo Row View
-struct TodoRowView: View {
-    let todo: TodoItemData
-    let family: WidgetFamily
-    let settings = WidgetSettings.shared
-
-    private var styledTitle: AttributedString {
-        let title = currentIsLowercase ? todo.title.lowercased() : todo.title
-        var attr = AttributedString(title)
-        if todo.isCompleted {
-            attr.strikethroughStyle = .single
-            attr.foregroundColor = .secondary
-        } else {
-            attr.foregroundColor = .primary
-        }
-        return attr
-    }
-
-    private var currentIsLowercase: Bool {
-        return settings.isLowercase(for: family)
-    }
-
-    private var currentFontSize: CGFloat {
-        return CGFloat(settings.fontSize(for: family))
-    }
-
-    var body: some View {
-        HStack {
-            Button(intent: ToggleTodoIntent(todoId: todo.id.uuidString)) {
-                Text(styledTitle)
-                    .font(.system(size: currentFontSize))
-                    .lineLimit(1)
-            }
-            .buttonStyle(.plain)
-
-            Spacer(minLength: 0)
-        }
+        TodoWidgetContentView(family: family, entry: entry)
+            .containerBackground(
+                settings.useCustomBackground(for: family)
+                    ? AnyShapeStyle(settings.backgroundColorValue(for: family))
+                    : AnyShapeStyle(.fill.tertiary),
+                for: .widget
+            )
+            .widgetURL(URL(string: "cleansed://todos"))
     }
 }
 
@@ -176,12 +67,13 @@ struct TodoWidget: Widget {
     let kind: String = "TodoWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: TodoProvider()) { entry in
+        StaticConfiguration(kind: kind, provider: TodoProvider()) { (entry: TodoEntry) in
             TodoWidgetEntryView(entry: entry)
         }
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
         .configurationDisplayName("Todo List")
         .description("View and complete your todos from the home screen")
+        .contentMarginsDisabled()
     }
 }
 
@@ -210,6 +102,9 @@ struct TodoWidget: Widget {
                 completedAt: Date(), sortDate: Date()),
             TodoItemData(
                 id: UUID(), title: "Team meeting", isCompleted: false, createdAt: Date(),
+                completedAt: nil, sortDate: Date()),
+            TodoItemData(
+                id: UUID(), title: "Team meeting 2", isCompleted: true, createdAt: Date(),
                 completedAt: nil, sortDate: Date()),
         ])
 }

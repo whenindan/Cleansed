@@ -126,6 +126,7 @@ struct WidgetSettingsView: View {
                     }
 
                     WidgetPreviewView(family: selectedFamily)
+                        .id(settingsHash)
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 }
@@ -341,6 +342,19 @@ struct WidgetSettingsView: View {
     }
 
     // MARK: - Helpers
+
+    private var settingsHash: Int {
+        var hasher = Hasher()
+        hasher.combine(isLowercase.wrappedValue)
+        hasher.combine(fontSize.wrappedValue)
+        hasher.combine(alignment.wrappedValue)
+        hasher.combine(horizontalPadding.wrappedValue)
+        hasher.combine(verticalPadding.wrappedValue)
+        hasher.combine(todosSpacing.wrappedValue)
+        hasher.combine(useCustomBackground.wrappedValue)
+        hasher.combine(backgroundColor.wrappedValue)
+        return hasher.finalize()
+    }
 
     private func reloadWidgets() {
         TodoManager.shared.reloadWidgets()
