@@ -62,11 +62,11 @@ struct TodoView: View {
                 TodoManager.shared.syncTodosToUserDefaults(newTodos)
             }
             .onAppear {
-                // Sync todos to UserDefaults for widget
-                TodoManager.shared.syncTodosToUserDefaults(todos)
-
                 // Sync changes from widget back to app
                 syncFromWidget()
+
+                // Sync todos to UserDefaults for widget
+                TodoManager.shared.syncTodosToUserDefaults(todos)
             }
             .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active {
