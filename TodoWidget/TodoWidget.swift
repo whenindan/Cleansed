@@ -216,16 +216,16 @@ struct TodoRowView: View {
     }
 
     var body: some View {
-        Button(intent: ToggleTodoIntent(todoId: todo.id.uuidString)) {
-            HStack {
+        HStack {
+            Button(intent: ToggleTodoIntent(todoId: todo.id.uuidString)) {
                 Text(styledTitle)
                     .font(.system(size: currentFontSize))
                     .lineLimit(1)
-
-                Spacer(minLength: 0)
             }
+            .buttonStyle(.plain)
+
+            Spacer(minLength: 0)
         }
-        .buttonStyle(.plain)
     }
 }
 
