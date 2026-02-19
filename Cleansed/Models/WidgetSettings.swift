@@ -343,7 +343,7 @@ struct TodoWidgetContentView: View {
         case .systemMedium: return 6
         case .systemLarge: return 12
         case .systemExtraLarge: return 20
-        @unknown default: return 3
+        default: return 3
         }
     }
 }
