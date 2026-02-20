@@ -338,13 +338,19 @@ struct TodoWidgetContentView: View {
     private var currentVerticalPadding: CGFloat { return settings.verticalPadding(for: family) }
 
     private var maxTodos: Int {
+        let widgetHeight: CGFloat
         switch family {
-        case .systemSmall: return 3
-        case .systemMedium: return 6
-        case .systemLarge: return 12
-        case .systemExtraLarge: return 20
-        default: return 3
+        case .systemSmall: widgetHeight = 158
+        case .systemMedium: widgetHeight = 158
+        case .systemLarge: widgetHeight = 354
+        case .systemExtraLarge: widgetHeight = 354
+        default: widgetHeight = 158
         }
+        let availableHeight = widgetHeight - (2 * currentVerticalPadding)
+        let rowHeight = CGFloat(settings.fontSize(for: family)) * 1.2
+        if availableHeight <= 0 { return 0 }
+        let count = Int((availableHeight + currentTodosSpacing) / (rowHeight + currentTodosSpacing))
+        return max(count, 0)
     }
 }
 
