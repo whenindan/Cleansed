@@ -30,11 +30,11 @@ class WidgetSettings {
     // MARK: - Large Widget Settings
     @AppStorage(
         "widget.large.isLowercase", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var largeIsLowercase: Bool = false
+    var largeIsLowercase: Bool = true
 
     @AppStorage(
         "widget.large.fontSize", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var largeFontSize: Int = 13
+    var largeFontSize: Int = 25
 
     @AppStorage(
         "widget.large.alignment", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
@@ -43,15 +43,15 @@ class WidgetSettings {
     @AppStorage(
         "widget.large.horizontalPadding",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var largeHorizontalPadding: Int = 12
+    var largeHorizontalPadding: Int = 13
 
     @AppStorage(
         "widget.large.verticalPadding", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var largeVerticalPadding: Int = 8
+    var largeVerticalPadding: Int = 10
 
     @AppStorage(
         "widget.large.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var largeTodosSpacing: Int = 8
+    var largeTodosSpacing: Int = 5
 
     @AppStorage(
         "widget.large.useCustomBackground",
@@ -65,11 +65,11 @@ class WidgetSettings {
     // MARK: - Medium Widget Settings
     @AppStorage(
         "widget.medium.isLowercase", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var mediumIsLowercase: Bool = false
+    var mediumIsLowercase: Bool = true
 
     @AppStorage(
         "widget.medium.fontSize", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var mediumFontSize: Int = 13
+    var mediumFontSize: Int = 18
 
     @AppStorage(
         "widget.medium.alignment", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
@@ -78,16 +78,16 @@ class WidgetSettings {
     @AppStorage(
         "widget.medium.horizontalPadding",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var mediumHorizontalPadding: Int = 14
+    var mediumHorizontalPadding: Int = 15
 
     @AppStorage(
         "widget.medium.verticalPadding", store: UserDefaults(suiteName: "group.com.cleansed.shared")
     )
-    var mediumVerticalPadding: Int = 10
+    var mediumVerticalPadding: Int = 15
 
     @AppStorage(
         "widget.medium.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var mediumTodosSpacing: Int = 8
+    var mediumTodosSpacing: Int = 5
 
     @AppStorage(
         "widget.medium.useCustomBackground",
@@ -102,11 +102,11 @@ class WidgetSettings {
     // MARK: - Small Widget Settings
     @AppStorage(
         "widget.small.isLowercase", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var smallIsLowercase: Bool = false
+    var smallIsLowercase: Bool = true
 
     @AppStorage(
         "widget.small.fontSize", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var smallFontSize: Int = 18
+    var smallFontSize: Int = 19
 
     @AppStorage(
         "widget.small.alignment", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
@@ -115,15 +115,15 @@ class WidgetSettings {
     @AppStorage(
         "widget.small.horizontalPadding",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var smallHorizontalPadding: Int = 8
+    var smallHorizontalPadding: Int = 10
 
     @AppStorage(
         "widget.small.verticalPadding", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var smallVerticalPadding: Int = 8
+    var smallVerticalPadding: Int = 10
 
     @AppStorage(
         "widget.small.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    var smallTodosSpacing: Int = 5
+    var smallTodosSpacing: Int = 4
 
     @AppStorage(
         "widget.small.useCustomBackground",
@@ -213,32 +213,32 @@ class WidgetSettings {
 
     func resetToDefaults() {
         // Large
-        largeIsLowercase = false
-        largeFontSize = 13
+        largeIsLowercase = true
+        largeFontSize = 25
         largeAlignment = "leading"
-        largeHorizontalPadding = 12
-        largeVerticalPadding = 8
-        largeTodosSpacing = 8
+        largeHorizontalPadding = 13
+        largeVerticalPadding = 10
+        largeTodosSpacing = 5
         largeUseCustomBackground = false
         largeBackgroundColor = "#1C1C1E"
 
         // Medium
-        mediumIsLowercase = false
-        mediumFontSize = 13
+        mediumIsLowercase = true
+        mediumFontSize = 18
         mediumAlignment = "leading"
-        mediumHorizontalPadding = 14
-        mediumVerticalPadding = 10
-        mediumTodosSpacing = 8
+        mediumHorizontalPadding = 15
+        mediumVerticalPadding = 15
+        mediumTodosSpacing = 5
         mediumUseCustomBackground = false
         mediumBackgroundColor = "#1C1C1E"
 
         // Small
-        smallIsLowercase = false
-        smallFontSize = 18
+        smallIsLowercase = true
+        smallFontSize = 19
         smallAlignment = "leading"
-        smallHorizontalPadding = 8
-        smallVerticalPadding = 8
-        smallTodosSpacing = 5
+        smallHorizontalPadding = 10
+        smallVerticalPadding = 10
+        smallTodosSpacing = 4
         smallUseCustomBackground = false
         smallBackgroundColor = "#1C1C1E"
 
@@ -320,11 +320,14 @@ struct TodoWidgetContentView: View {
                 .frame(maxWidth: .infinity)
                 Spacer()
             } else {
+                if family == .systemLarge || family == .systemExtraLarge {
+                    Spacer(minLength: 0)
+                }
                 let displayTodos = Array(entry.todos.prefix(maxTodos))
                 ForEach(displayTodos, id: \.id) { todo in
                     TodoRowView(todo: todo, family: family)
                 }
-                Spacer()
+                Spacer(minLength: 0)
             }
         }
         .padding(.horizontal, currentHorizontalPadding)

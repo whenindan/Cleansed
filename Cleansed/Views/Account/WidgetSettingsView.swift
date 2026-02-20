@@ -20,23 +20,23 @@ struct WidgetSettingsView: View {
     // Large (Default)
     @AppStorage(
         "widget.large.isLowercase", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var largeIsLowercase: Bool = false
+    private var largeIsLowercase: Bool = true
     @AppStorage(
         "widget.large.fontSize", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var largeFontSize: Int = 13
+    private var largeFontSize: Int = 25
     @AppStorage(
         "widget.large.alignment", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
     private var largeAlignment: String = "leading"
     @AppStorage(
         "widget.large.horizontalPadding",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var largeHorizontalPadding: Int = 12
+    private var largeHorizontalPadding: Int = 13
     @AppStorage(
         "widget.large.verticalPadding", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var largeVerticalPadding: Int = 8
+    private var largeVerticalPadding: Int = 10
     @AppStorage(
         "widget.large.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var largeTodosSpacing: Int = 8
+    private var largeTodosSpacing: Int = 5
     @AppStorage(
         "widget.large.useCustomBackground",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
@@ -48,24 +48,24 @@ struct WidgetSettingsView: View {
     // Medium
     @AppStorage(
         "widget.medium.isLowercase", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var mediumIsLowercase: Bool = false
+    private var mediumIsLowercase: Bool = true
     @AppStorage(
         "widget.medium.fontSize", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var mediumFontSize: Int = 13
+    private var mediumFontSize: Int = 18
     @AppStorage(
         "widget.medium.alignment", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
     private var mediumAlignment: String = "leading"
     @AppStorage(
         "widget.medium.horizontalPadding",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var mediumHorizontalPadding: Int = 14
+    private var mediumHorizontalPadding: Int = 15
     @AppStorage(
         "widget.medium.verticalPadding", store: UserDefaults(suiteName: "group.com.cleansed.shared")
     )
-    private var mediumVerticalPadding: Int = 10
+    private var mediumVerticalPadding: Int = 15
     @AppStorage(
         "widget.medium.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var mediumTodosSpacing: Int = 8
+    private var mediumTodosSpacing: Int = 5
     @AppStorage(
         "widget.medium.useCustomBackground",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
@@ -78,23 +78,23 @@ struct WidgetSettingsView: View {
     // Small
     @AppStorage(
         "widget.small.isLowercase", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var smallIsLowercase: Bool = false
+    private var smallIsLowercase: Bool = true
     @AppStorage(
         "widget.small.fontSize", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var smallFontSize: Int = 18
+    private var smallFontSize: Int = 19
     @AppStorage(
         "widget.small.alignment", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
     private var smallAlignment: String = "leading"
     @AppStorage(
         "widget.small.horizontalPadding",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var smallHorizontalPadding: Int = 8
+    private var smallHorizontalPadding: Int = 10
     @AppStorage(
         "widget.small.verticalPadding", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var smallVerticalPadding: Int = 8
+    private var smallVerticalPadding: Int = 10
     @AppStorage(
         "widget.small.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
-    private var smallTodosSpacing: Int = 5
+    private var smallTodosSpacing: Int = 4
     @AppStorage(
         "widget.small.useCustomBackground",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
@@ -153,7 +153,7 @@ struct WidgetSettingsView: View {
                         .frame(width: 30)
                     Text("Font size: \(fontSize.wrappedValue)")
                     Spacer()
-                    Stepper("", value: fontSize, in: 8...40)
+                    Stepper("", value: fontSize, in: 8...40, step: 1)
                         .onChange(of: fontSize.wrappedValue) { _, _ in
                             reloadWidgets()
                         }
@@ -187,7 +187,7 @@ struct WidgetSettingsView: View {
                         .frame(width: 30)
                     Text("Horizontal padding: \(horizontalPadding.wrappedValue)")
                     Spacer()
-                    Stepper("", value: horizontalPadding, in: 0...50)
+                    Stepper("", value: horizontalPadding, in: 0...40)
                         .onChange(of: horizontalPadding.wrappedValue) { _, _ in
                             reloadWidgets()
                         }
@@ -199,7 +199,7 @@ struct WidgetSettingsView: View {
                         .frame(width: 30)
                     Text("Vertical padding: \(verticalPadding.wrappedValue)")
                     Spacer()
-                    Stepper("", value: verticalPadding, in: 0...50)
+                    Stepper("", value: verticalPadding, in: 0...40)
                         .onChange(of: verticalPadding.wrappedValue) { _, _ in
                             reloadWidgets()
                         }
@@ -211,7 +211,7 @@ struct WidgetSettingsView: View {
                         .frame(width: 30)
                     Text("Todos spacing: \(todosSpacing.wrappedValue)")
                     Spacer()
-                    Stepper("", value: todosSpacing, in: 0...50)
+                    Stepper("", value: todosSpacing, in: 0...40)
                         .onChange(of: todosSpacing.wrappedValue) { _, _ in
                             reloadWidgets()
                         }
@@ -267,8 +267,7 @@ struct WidgetSettingsView: View {
         .alert("Reset Settings", isPresented: $showResetAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Reset", role: .destructive) {
-                settings.resetToDefaults()
-                updateSelectedColor()
+                resetAllToDefaults()
             }
         } message: {
             Text("Are you sure you want to reset all widget settings to default?")
@@ -362,6 +361,41 @@ struct WidgetSettingsView: View {
 
     private func updateSelectedColor() {
         selectedColor = Color(hex: backgroundColor.wrappedValue) ?? .black
+    }
+
+    private func resetAllToDefaults() {
+        // Large
+        largeIsLowercase = true
+        largeFontSize = 25
+        largeAlignment = "leading"
+        largeHorizontalPadding = 13
+        largeVerticalPadding = 10
+        largeTodosSpacing = 5
+        largeUseCustomBackground = false
+        largeBackgroundColor = "#1C1C1E"
+
+        // Medium
+        mediumIsLowercase = true
+        mediumFontSize = 18
+        mediumAlignment = "leading"
+        mediumHorizontalPadding = 15
+        mediumVerticalPadding = 15
+        mediumTodosSpacing = 5
+        mediumUseCustomBackground = false
+        mediumBackgroundColor = "#1C1C1E"
+
+        // Small
+        smallIsLowercase = true
+        smallFontSize = 19
+        smallAlignment = "leading"
+        smallHorizontalPadding = 10
+        smallVerticalPadding = 10
+        smallTodosSpacing = 4
+        smallUseCustomBackground = false
+        smallBackgroundColor = "#1C1C1E"
+
+        updateSelectedColor()
+        reloadWidgets()
     }
 }
 
