@@ -5,9 +5,7 @@ struct AccountView: View {
         NavigationStack {
             List {
                 Section {
-                    Button(action: {
-                        // Placeholder action
-                    }) {
+                    NavigationLink(destination: SignInView()) {
                         Label("Sign in", systemImage: "person.circle")
                             .foregroundStyle(Color.primary)
                     }
