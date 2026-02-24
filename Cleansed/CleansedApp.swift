@@ -5,6 +5,7 @@
 //  Created by Nguyen Trong Dat on 2/14/26.
 //
 
+import FamilyControls
 import SwiftData
 import SwiftUI
 
@@ -17,8 +18,8 @@ struct CleansedApp: App {
             MainTabView()
                 .preferredColorScheme(isDarkMode ? .dark : .light)
         }
-        .modelContainer(for: [TodoItem.self, Habit.self, HabitCompletion.self, FocusSchedule.self])
-        { result in
+        .modelContainer(for: [TodoItem.self, Habit.self, HabitCompletion.self, FocusGroup.self]) {
+            result in
             do {
                 let container = try result.get()
                 // Configure automatic migration
