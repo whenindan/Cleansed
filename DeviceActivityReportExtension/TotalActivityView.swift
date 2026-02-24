@@ -8,16 +8,70 @@
 import SwiftUI
 
 struct TotalActivityView: View {
-    let totalActivity: String
-    
+    let totalActivity: ActivityReportData
+
     var body: some View {
-        Text(totalActivity)
+        VStack(alignment: .leading, spacing: 12) {
+            // Total screen time
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Total Screen Time")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(formatDuration(totalActivity.totalDuration))
+                        .font(.title2.bold())
+                }
+                Spacer()
+            }
+
+            if !totalActivity.apps.isEmpty {
+                Divider()
+
+                Text("Top Apps")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                ForEach(totalActivity.apps) { app in
+                    HStack {
+                        Text(app.name)
+                            .font(.subheadline)
+                            .lineLimit(1)
+
+                        Spacer()
+
+                        Text(app.formattedDuration)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } else {
+                Text("No activity data available yet.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 8)
+            }
+        }
+        .padding(16)
+    }
+
+    private func formatDuration(_ interval: TimeInterval) -> String {
+        let hours = Int(interval) / 3600
+        let minutes = (Int(interval) % 3600) / 60
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        }
+        return "\(minutes) min"
     }
 }
 
-// In order to support previews for your extension's custom views, make sure its source files are
-// members of your app's Xcode target as well as members of your extension's target. You can use
-// Xcode's File Inspector to modify a file's Target Membership.
 #Preview {
-    TotalActivityView(totalActivity: "1h 23m")
+    TotalActivityView(
+        totalActivity: ActivityReportData(
+            totalDuration: 5580,
+            apps: [
+                AppUsageData(name: "Safari", duration: 3600),
+                AppUsageData(name: "Messages", duration: 1200),
+                AppUsageData(name: "Instagram", duration: 780),
+            ]
+        ))
 }

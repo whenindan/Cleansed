@@ -157,6 +157,27 @@
 			);
 			target = FD7AE2022F4D6175004918C7 /* DeviceActivityReportExtension */;
 		};
+		FD7AE30C2F4D662E004918C7 /* Exceptions for "DeviceActivityMonitorExtension" folder in "DeviceActivityMonitorExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FD7AE1C42F4D60B1004918C7 /* DeviceActivityMonitorExtension */;
+		};
+		FD7AE30D2F4D6632004918C7 /* Exceptions for "ShieldActionExtension" folder in "ShieldActionExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FD7AE1ED2F4D6147004918C7 /* ShieldActionExtension */;
+		};
+		FD7AE30E2F4D6635004918C7 /* Exceptions for "DeviceActivityReportExtension" folder in "DeviceActivityReportExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FD7AE2022F4D6175004918C7 /* DeviceActivityReportExtension */;
+		};
 		FDFA88C32F44B38D00792EFD /* Exceptions for "Cleansed" folder in "TodoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -186,6 +207,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		FD7AE1C72F4D60B1004918C7 /* DeviceActivityMonitorExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FD7AE30C2F4D662E004918C7 /* Exceptions for "DeviceActivityMonitorExtension" folder in "DeviceActivityMonitorExtension" target */,
+			);
 			path = DeviceActivityMonitorExtension;
 			sourceTree = "<group>";
 		};
@@ -199,11 +223,17 @@
 		};
 		FD7AE1F02F4D6147004918C7 /* ShieldActionExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FD7AE30D2F4D6632004918C7 /* Exceptions for "ShieldActionExtension" folder in "ShieldActionExtension" target */,
+			);
 			path = ShieldActionExtension;
 			sourceTree = "<group>";
 		};
 		FD7AE2042F4D6175004918C7 /* DeviceActivityReportExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FD7AE30E2F4D6635004918C7 /* Exceptions for "DeviceActivityReportExtension" folder in "DeviceActivityReportExtension" target */,
+			);
 			path = DeviceActivityReportExtension;
 			sourceTree = "<group>";
 		};

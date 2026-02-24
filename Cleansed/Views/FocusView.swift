@@ -285,7 +285,7 @@ struct DeviceActivityReportContainer: View {
 
     var body: some View {
         DeviceActivityReport(
-            DeviceActivityReport.Context("TotalActivity"),
+            DeviceActivityReport.Context("Total Activity"),
             filter: filter
         )
     }

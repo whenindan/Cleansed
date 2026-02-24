@@ -45,195 +45,17 @@ struct FocusGroupDetailView: View {
         ("#6B7280", "Gray"),
     ]
 
+    private var accentColor: Color {
+        Color(hex: editedColorHex) ?? .purple
+    }
+
     var body: some View {
         NavigationStack {
             Form {
-                // MARK: - Status
-                Section {
-                    HStack {
-                        Text("Status")
-                        Spacer()
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(group.isEnabled ? Color.green : Color.secondary)
-                                .frame(width: 10, height: 10)
-                            Text(group.isEnabled ? "Active" : "Inactive")
-                                .foregroundStyle(group.isEnabled ? .green : .secondary)
-                                .fontWeight(.medium)
-                        }
-                    }
-
-                    Toggle(
-                        "Enabled",
-                        isOn: Binding(
-                            get: { group.isEnabled },
-                            set: { newValue in
-                                screenTimeManager.toggleGroup(group, enabled: newValue)
-                            }
-                        ))
-                }
-
-                // MARK: - Name & Appearance
-                Section("Name & Appearance") {
-                    TextField("Name", text: $editedName)
-                        .onChange(of: editedName) { _, newVal in
-                            group.name = newVal
-                        }
-
-                    // Icon picker
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Icon")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        LazyVGrid(
-                            columns: Array(repeating: GridItem(.flexible()), count: 8),
-                            spacing: 10
-                        ) {
-                            ForEach(icons, id: \.self) { icon in
-                                Button {
-                                    editedIcon = icon
-                                    group.icon = icon
-                                } label: {
-                                    Image(systemName: icon)
-                                        .font(.title3)
-                                        .frame(width: 36, height: 36)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(
-                                                    editedIcon == icon
-                                                        ? Color(hex: editedColorHex).opacity(0.2)
-                                                        : Color.clear)
-                                        )
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .stroke(
-                                                    editedIcon == icon
-                                                        ? Color(hex: editedColorHex)
-                                                        : .clear, lineWidth: 2)
-                                        )
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-
-                    // Color picker
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Color")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        LazyVGrid(
-                            columns: Array(repeating: GridItem(.flexible()), count: 5),
-                            spacing: 10
-                        ) {
-                            ForEach(colors, id: \.0) { hex, _ in
-                                Button {
-                                    editedColorHex = hex
-                                    group.colorHex = hex
-                                } label: {
-                                    Circle()
-                                        .fill(Color(hex: hex))
-                                        .frame(width: 32, height: 32)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(
-                                                    Color.primary,
-                                                    lineWidth: editedColorHex == hex ? 3 : 0)
-                                        )
-                                        .overlay(
-                                            Image(systemName: "checkmark")
-                                                .font(.caption.bold())
-                                                .foregroundStyle(.white)
-                                                .opacity(editedColorHex == hex ? 1 : 0)
-                                        )
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                }
-
-                // MARK: - App Selection
-                Section {
-                    Button {
-                        showAppPicker = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "app.badge")
-                                .foregroundStyle(Color(hex: editedColorHex))
-                            Text("Edit Blocked Apps")
-                            Spacer()
-                            let count =
-                                activitySelection.applicationTokens.count
-                                + activitySelection.categoryTokens.count
-                            if count > 0 {
-                                Text("\(count) selected")
-                                    .foregroundStyle(.secondary)
-                            }
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                } header: {
-                    Text("Blocked Apps")
-                }
-
-                // MARK: - Schedule
-                Section("Activation Mode") {
-                    Picker("Mode", selection: $editedScheduleType) {
-                        ForEach(ScheduleType.allCases, id: \.self) { type in
-                            Label(type.rawValue, systemImage: type.icon)
-                                .tag(type)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .onChange(of: editedScheduleType) { _, newVal in
-                        group.scheduleType = newVal
-                    }
-
-                    switch editedScheduleType {
-                    case .manual:
-                        HStack {
-                            Image(systemName: "hand.tap")
-                                .foregroundStyle(.secondary)
-                            Text("Toggle this focus group on or off manually.")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-
-                    case .scheduled:
-                        DatePicker(
-                            "Start Time",
-                            selection: $editedStartDate,
-                            displayedComponents: .hourAndMinute
-                        )
-                        .onChange(of: editedStartDate) { _, newVal in
-                            let comps = Calendar.current.dateComponents(
-                                [.hour, .minute], from: newVal)
-                            group.startHour = comps.hour ?? 22
-                            group.startMinute = comps.minute ?? 0
-                        }
-
-                        DatePicker(
-                            "End Time",
-                            selection: $editedEndDate,
-                            displayedComponents: .hourAndMinute
-                        )
-                        .onChange(of: editedEndDate) { _, newVal in
-                            let comps = Calendar.current.dateComponents(
-                                [.hour, .minute], from: newVal)
-                            group.endHour = comps.hour ?? 7
-                            group.endMinute = comps.minute ?? 0
-                        }
-
-                        weekdayPicker
-
-                    case .timer:
-                        timerPicker
-                    }
-                }
+                statusSection
+                nameAndAppearanceSection
+                appSelectionSection
+                scheduleSection
             }
             .navigationTitle(group.name)
             .navigationBarTitleDisplayMode(.inline)
@@ -255,6 +77,198 @@ struct FocusGroupDetailView: View {
         }
     }
 
+    // MARK: - Sections
+
+    private var statusSection: some View {
+        Section {
+            HStack {
+                Text("Status")
+                Spacer()
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(group.isEnabled ? Color.green : Color.secondary)
+                        .frame(width: 10, height: 10)
+                    Text(group.isEnabled ? "Active" : "Inactive")
+                        .foregroundStyle(group.isEnabled ? .green : .secondary)
+                        .fontWeight(.medium)
+                }
+            }
+
+            Toggle(
+                "Enabled",
+                isOn: Binding(
+                    get: { group.isEnabled },
+                    set: { newValue in
+                        screenTimeManager.toggleGroup(group, enabled: newValue)
+                    }
+                ))
+        }
+    }
+
+    private var nameAndAppearanceSection: some View {
+        Section("Name & Appearance") {
+            TextField("Name", text: $editedName)
+                .onChange(of: editedName) { _, newVal in
+                    group.name = newVal
+                }
+            iconPickerView
+            colorPickerView
+        }
+    }
+
+    private var iconPickerView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Icon")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible()), count: 8),
+                spacing: 10
+            ) {
+                ForEach(icons, id: \.self) { icon in
+                    let isSelected = editedIcon == icon
+                    Button {
+                        editedIcon = icon
+                        group.icon = icon
+                    } label: {
+                        Image(systemName: icon)
+                            .font(.title3)
+                            .frame(width: 36, height: 36)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(isSelected ? accentColor.opacity(0.2) : Color.clear)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(isSelected ? accentColor : .clear, lineWidth: 2)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var colorPickerView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Color")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible()), count: 5),
+                spacing: 10
+            ) {
+                ForEach(colors, id: \.0) { hex, _ in
+                    let chipColor = Color(hex: hex) ?? .gray
+                    let isSelected = editedColorHex == hex
+                    Button {
+                        editedColorHex = hex
+                        group.colorHex = hex
+                    } label: {
+                        Circle()
+                            .fill(chipColor)
+                            .frame(width: 32, height: 32)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.primary, lineWidth: isSelected ? 3 : 0)
+                            )
+                            .overlay(
+                                Image(systemName: "checkmark")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.white)
+                                    .opacity(isSelected ? 1 : 0)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var appSelectionSection: some View {
+        Section {
+            Button {
+                showAppPicker = true
+            } label: {
+                HStack {
+                    Image(systemName: "app.badge")
+                        .foregroundStyle(accentColor)
+                    Text("Edit Blocked Apps")
+                    Spacer()
+                    let count =
+                        activitySelection.applicationTokens.count
+                        + activitySelection.categoryTokens.count
+                    if count > 0 {
+                        Text("\(count) selected")
+                            .foregroundStyle(.secondary)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+        } header: {
+            Text("Blocked Apps")
+        }
+    }
+
+    private var scheduleSection: some View {
+        Section("Activation Mode") {
+            Picker("Mode", selection: $editedScheduleType) {
+                ForEach(ScheduleType.allCases, id: \.self) { type in
+                    Label(type.rawValue, systemImage: type.icon)
+                        .tag(type)
+                }
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: editedScheduleType) { _, newVal in
+                group.scheduleType = newVal
+            }
+
+            switch editedScheduleType {
+            case .manual:
+                HStack {
+                    Image(systemName: "hand.tap")
+                        .foregroundStyle(.secondary)
+                    Text("Toggle this focus group on or off manually.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+            case .scheduled:
+                DatePicker(
+                    "Start Time",
+                    selection: $editedStartDate,
+                    displayedComponents: .hourAndMinute
+                )
+                .onChange(of: editedStartDate) { _, newVal in
+                    let comps = Calendar.current.dateComponents(
+                        [.hour, .minute], from: newVal)
+                    group.startHour = comps.hour ?? 22
+                    group.startMinute = comps.minute ?? 0
+                }
+
+                DatePicker(
+                    "End Time",
+                    selection: $editedEndDate,
+                    displayedComponents: .hourAndMinute
+                )
+                .onChange(of: editedEndDate) { _, newVal in
+                    let comps = Calendar.current.dateComponents(
+                        [.hour, .minute], from: newVal)
+                    group.endHour = comps.hour ?? 7
+                    group.endMinute = comps.minute ?? 0
+                }
+
+                weekdayPicker
+
+            case .timer:
+                timerPicker
+            }
+        }
+    }
+
     // MARK: - Weekday Picker
 
     private var weekdayPicker: some View {
@@ -265,8 +279,9 @@ struct FocusGroupDetailView: View {
             HStack(spacing: 6) {
                 ForEach(1...7, id: \.self) { day in
                     let symbol = Calendar.current.shortWeekdaySymbols[day - 1]
+                    let isSelected = editedWeekdays.contains(day)
                     Button {
-                        if editedWeekdays.contains(day) {
+                        if isSelected {
                             editedWeekdays.remove(day)
                         } else {
                             editedWeekdays.insert(day)
@@ -276,16 +291,8 @@ struct FocusGroupDetailView: View {
                         Text(String(symbol.prefix(2)))
                             .font(.caption.bold())
                             .frame(width: 36, height: 36)
-                            .background(
-                                editedWeekdays.contains(day)
-                                    ? Color(hex: editedColorHex)
-                                    : Color(.tertiarySystemFill)
-                            )
-                            .foregroundStyle(
-                                editedWeekdays.contains(day)
-                                    ? .white
-                                    : Color.primary
-                            )
+                            .background(isSelected ? accentColor : Color(.tertiarySystemFill))
+                            .foregroundStyle(isSelected ? .white : Color.primary)
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
@@ -307,6 +314,7 @@ struct FocusGroupDetailView: View {
                 spacing: 10
             ) {
                 ForEach(TimerDuration.allCases) { duration in
+                    let selected = isTimerSelected(duration)
                     Button {
                         if duration == .custom {
                             editedTimerDuration = 45
@@ -321,16 +329,9 @@ struct FocusGroupDetailView: View {
                             .padding(.vertical, 12)
                             .background(
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(
-                                        isTimerSelected(duration)
-                                            ? Color(hex: editedColorHex)
-                                            : Color(.tertiarySystemFill))
+                                    .fill(selected ? accentColor : Color(.tertiarySystemFill))
                             )
-                            .foregroundStyle(
-                                isTimerSelected(duration)
-                                    ? .white
-                                    : Color.primary
-                            )
+                            .foregroundStyle(selected ? .white : Color.primary)
                     }
                     .buttonStyle(.plain)
                 }

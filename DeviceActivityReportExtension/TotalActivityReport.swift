@@ -7,33 +7,64 @@
 
 import DeviceActivity
 import ExtensionKit
+import ManagedSettings
 import SwiftUI
 
 extension DeviceActivityReport.Context {
-    // If your app initializes a DeviceActivityReport with this context, then the system will use
-    // your extension's corresponding DeviceActivityReportScene to render the contents of the
-    // report.
     static let totalActivity = Self("Total Activity")
 }
 
+/// Data model for the report
+struct ActivityReportData: Sendable {
+    let totalDuration: TimeInterval
+    let apps: [AppUsageData]
+}
+
+struct AppUsageData: Identifiable, Sendable {
+    let id = UUID()
+    let name: String
+    let duration: TimeInterval
+
+    var formattedDuration: String {
+        let hours = Int(duration) / 3600
+        let minutes = (Int(duration) % 3600) / 60
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        }
+        return "\(minutes)m"
+    }
+}
+
 struct TotalActivityReport: DeviceActivityReportScene {
-    // Define which context your scene will represent.
     let context: DeviceActivityReport.Context = .totalActivity
-    
-    // Define the custom configuration and the resulting view for this report.
-    let content: (String) -> TotalActivityView
-    
-    func makeConfiguration(representing data: DeviceActivityResults<DeviceActivityData>) async -> String {
-        // Reformat the data into a configuration that can be used to create
-        // the report's view.
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = [.day, .hour, .minute, .second]
-        formatter.unitsStyle = .abbreviated
-        formatter.zeroFormattingBehavior = .dropAll
-        
-        let totalActivityDuration = await data.flatMap { $0.activitySegments }.reduce(0, {
-            $0 + $1.totalActivityDuration
-        })
-        return formatter.string(from: totalActivityDuration) ?? "No activity data"
+
+    let content: (ActivityReportData) -> TotalActivityView
+
+    func makeConfiguration(representing data: DeviceActivityResults<DeviceActivityData>) async
+        -> ActivityReportData
+    {
+        var totalDuration: TimeInterval = 0
+        var appUsages: [AppUsageData] = []
+
+        for await activityData in data {
+            for await segment in activityData.activitySegments {
+                totalDuration += segment.totalActivityDuration
+
+                for await categoryData in segment.categories {
+                    for await app in categoryData.applications {
+                        let appName = app.application.localizedDisplayName ?? "Unknown"
+                        let duration = app.totalActivityDuration
+                        if duration > 0 {
+                            appUsages.append(AppUsageData(name: appName, duration: duration))
+                        }
+                    }
+                }
+            }
+        }
+
+        appUsages.sort { $0.duration > $1.duration }
+        let topApps = Array(appUsages.prefix(10))
+
+        return ActivityReportData(totalDuration: totalDuration, apps: topApps)
     }
 }
