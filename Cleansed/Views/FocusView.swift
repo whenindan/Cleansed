@@ -208,52 +208,129 @@ struct FocusGroupRow: View {
     let onDelete: () -> Void
 
     @State private var showDeleteConfirmation = false
+    @State private var offset: CGFloat = 0
+    @State private var isSwiped = false
+
+    private let deleteButtonWidth: CGFloat = 80
 
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 14) {
-                // Icon
-                Image(systemName: group.icon)
-                    .font(.title3)
-                    .foregroundStyle(group.color)
-                    .frame(width: 40, height: 40)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(group.color.opacity(0.15))
-                    )
-
-                // Info
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(group.name)
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(Color.primary)
-
-                    Text(group.scheduleDescription)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        ZStack(alignment: .trailing) {
+            // Delete button behind the row
+            Button {
+                showDeleteConfirmation = true
+            } label: {
+                VStack {
+                    Image(systemName: "trash")
+                        .font(.title3)
+                    Text("Delete")
+                        .font(.caption2)
                 }
-
-                Spacer()
-
-                // Toggle
-                Toggle(
-                    "",
-                    isOn: Binding(
-                        get: { group.isEnabled },
-                        set: { newValue in
-                            screenTimeManager.toggleGroup(group, enabled: newValue)
-                        }
-                    )
+                .foregroundStyle(.white)
+                .frame(width: deleteButtonWidth, height: nil)
+                .frame(maxHeight: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(.red)
                 )
-                .labelsHidden()
             }
-            .padding(14)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color(.secondarySystemBackground))
+
+            // Main row content
+            Button(action: {
+                if isSwiped {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        offset = 0
+                        isSwiped = false
+                    }
+                } else {
+                    onTap()
+                }
+            }) {
+                HStack(spacing: 14) {
+                    // Icon
+                    Image(systemName: group.icon)
+                        .font(.title3)
+                        .foregroundStyle(group.color)
+                        .frame(width: 40, height: 40)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(group.color.opacity(0.15))
+                        )
+
+                    // Info
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(group.name)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(Color.primary)
+
+                        Text(group.scheduleDescription)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    // Toggle
+                    Toggle(
+                        "",
+                        isOn: Binding(
+                            get: { group.isEnabled },
+                            set: { newValue in
+                                screenTimeManager.toggleGroup(group, enabled: newValue)
+                            }
+                        )
+                    )
+                    .labelsHidden()
+                }
+                .padding(14)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color(.secondarySystemBackground))
+                )
+            }
+            .buttonStyle(.plain)
+            .offset(x: offset)
+            .gesture(
+                DragGesture(minimumDistance: 20)
+                    .onChanged { value in
+                        let translation = value.translation.width
+                        if isSwiped {
+                            // Already swiped open — allow dragging further left or back right
+                            let newOffset = -deleteButtonWidth + translation
+                            offset = min(0, max(-deleteButtonWidth * 1.5, newOffset))
+                        } else {
+                            // Only allow left swipe
+                            if translation < 0 {
+                                offset = max(-deleteButtonWidth * 1.5, translation)
+                            }
+                        }
+                    }
+                    .onEnded { value in
+                        let threshold = deleteButtonWidth * 0.4
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            if isSwiped {
+                                // If was open and dragged right past threshold, close
+                                if value.translation.width > threshold {
+                                    offset = 0
+                                    isSwiped = false
+                                } else {
+                                    offset = -deleteButtonWidth
+                                    isSwiped = true
+                                }
+                            } else {
+                                // If dragged left past threshold, open
+                                if -value.translation.width > threshold {
+                                    offset = -deleteButtonWidth
+                                    isSwiped = true
+                                } else {
+                                    offset = 0
+                                    isSwiped = false
+                                }
+                            }
+                        }
+                    }
             )
         }
-        .buttonStyle(.plain)
+        .clipped()
         .contextMenu {
             Button(role: .destructive) {
                 showDeleteConfirmation = true
@@ -263,6 +340,10 @@ struct FocusGroupRow: View {
         }
         .confirmationDialog("Delete \"\(group.name)\"?", isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    offset = 0
+                    isSwiped = false
+                }
                 onDelete()
             }
         } message: {

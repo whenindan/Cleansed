@@ -1,10 +1,11 @@
 # Cleansed
 
-Cleansed is an iOS productivity app built with SwiftUI and SwiftData. It combines:
+Cleansed is an iOS productivity app built with SwiftUI + SwiftData.
 
+It combines:
 - Todo management
 - Habit tracking with completion history
-- Time-based focus scheduling
+- Focus groups using Screen Time APIs (FamilyControls + DeviceActivity)
 - A Home Screen widget with interactive todo toggles
 
 ## Tech Stack
@@ -13,61 +14,66 @@ Cleansed is an iOS productivity app built with SwiftUI and SwiftData. It combine
 - SwiftUI
 - SwiftData
 - WidgetKit + App Intents
-- Xcode project (`Cleansed.xcodeproj`)
+- FamilyControls + DeviceActivity (with monitor/report/shield extensions)
 
-## Project Structure
+## Targets
 
-- `Cleansed/` - Main app target
-- `TodoWidget/` - Widget extension target
-- `CleansedTests/` - Unit test target
-- `CleansedUITests/` - UI test target
+- `Cleansed/` - Main app
+- `TodoWidget/` - Widget extension
+- `DeviceActivityMonitorExtension/` - Focus session lifecycle monitor
+- `DeviceActivityReportExtension/` - Device activity report scene
+- `ShieldActionExtension/` - Shield action hooks
+- `ShieldConfigurationExtension/` - Shield UI configuration
+- `CleansedTests/` - Unit tests
+- `CleansedUITests/` - UI tests
 
 ## Core Features
 
 - Todos
   - Create, complete/uncomplete, and delete tasks
-  - Ordering behavior tuned for quick capture and recent interactions
+  - Shared with widget through App Group storage
 - Habits
-  - Track completions and view history/streak-oriented details
+  - Track completions with history/stat-style views
 - Focus
-  - Enable/disable daily focus windows with start/end schedule and active status indicator
-- Appearance
-  - In-app dark mode toggle via app storage
+  - Create focus groups to block selected apps/categories
+  - Start/stop sessions and display device activity reporting
+- Account/Settings
+  - Theme toggle
+  - Widget appearance customization (size-specific settings)
 - Widget
-  - Displays shared todos on Home Screen
-  - Supports `.systemSmall`, `.systemMedium`, `.systemLarge`, `.systemExtraLarge`
-  - Tapping a widget item triggers `ToggleTodoIntent` to update completion
-  - Widget style controls for text, spacing, alignment, and background color
+  - Supports interactive todo completion via `ToggleTodoIntent`
+  - Supports small/medium/large/extralarge families
 
-## Data + Widget Sync
+## Shared Data and App Groups
 
-Todo data is synchronized between app and widget through app-group `UserDefaults`:
+The app and extensions use shared `UserDefaults` in App Groups for cross-target data exchange.
 
-1. SwiftData stores canonical app todo records.
-2. App serializes todos to shared defaults (`group.com.cleansed.shared`).
-3. Widget reads shared payload for timeline rendering.
-4. Widget actions call `ToggleTodoIntent`.
-5. Intent updates shared payload and reloads widget timelines.
-6. App syncs shared changes back into SwiftData when active.
+Configured app groups in entitlements:
+- `group.com.cleansed.shared`
+- `group.learn.Cleansed`
+
+`TodoManager` and widget settings use `group.com.cleansed.shared` for todo payload + widget appearance state.
 
 ## Requirements
 
 - macOS with Xcode installed
-- Xcode with iOS 17 SDK
-- iOS 17.0+ deployment target
+- iOS SDK compatible with the deployment settings in `Cleansed.xcodeproj`
+- Apple Developer provisioning/capabilities for:
+  - App Groups
+  - Family Controls / Device Activity / Managed Settings (for focus blocking features)
 
 ## Setup
 
 1. Open `Cleansed.xcodeproj` in Xcode.
-2. Select the `Cleansed` scheme and an iOS 17+ simulator/device.
-3. Ensure both app target and widget target use the same App Group:
-   - `group.com.cleansed.shared`
-4. Build and run.
+2. Select a signing team for all app + extension targets.
+3. Verify Signing & Capabilities for each relevant target:
+   - App Groups (matching IDs across app/extensions)
+   - Family Controls related entitlements
+4. Build and run the `Cleansed` scheme on a supported iOS simulator/device.
 
 ## Running Tests
 
 From Xcode:
-
 - `Product` -> `Test`
 
 From command line:
@@ -79,17 +85,12 @@ xcodebuild test \
   -destination 'platform=iOS Simulator,name=iPhone 15'
 ```
 
-## Main Files
+## Key Files
 
-- `Cleansed/CleansedApp.swift` - App entry + SwiftData container
-- `Cleansed/Views/MainTabView.swift` - Tab navigation + deep link handling
-- `Cleansed/Views/TodoView.swift` - Todo UI and widget sync hooks
-- `Cleansed/Managers/TodoManager.swift` - Shared todo encoding/decoding and widget reload
-- `Cleansed/Intents/ToggleTodoIntent.swift` - Widget interaction intent
-- `Cleansed/Models/WidgetSettings.swift` - Shared widget appearance settings
-- `TodoWidget/TodoWidget.swift` - Widget provider + configuration
-
-## Notes
-
-- The Focus tab includes a placeholder app-blocking action that requires additional Apple entitlements.
-- Widget integration depends on properly configured App Group capabilities in Signing & Capabilities.
+- `Cleansed/CleansedApp.swift` - app entry + SwiftData container
+- `Cleansed/Views/MainTabView.swift` - tab navigation + widget deep-link handling
+- `Cleansed/Managers/TodoManager.swift` - shared todo encoding/sync + widget reloads
+- `Cleansed/Intents/ToggleTodoIntent.swift` - widget interaction intent
+- `Cleansed/ViewModels/FocusManager.swift` - focus group scheduling/blocking orchestration
+- `Cleansed/Views/FocusView.swift` - focus UI + DeviceActivity report embedding
+- `TodoWidget/TodoWidget.swift` - widget provider + timeline/config
