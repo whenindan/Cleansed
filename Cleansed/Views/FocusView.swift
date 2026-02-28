@@ -16,60 +16,114 @@ struct FocusView: View {
 
     @State private var screenTimeManager = ScreenTimeManager()
     @State private var showCreateSheet = false
-    @State private var selectedGroup: FocusGroup?
     @State private var currentTime = Date()
 
     let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Color(.systemBackground).ignoresSafeArea()
+        NavigationStack {
+            ZStack(alignment: .bottomTrailing) {
+                // Background color for ZStack consistency
+                Color(.systemBackground).ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 0) {
+                    List {
+                        // MARK: - Authorization Banner
+                        if !screenTimeManager.isAuthorized {
+                            Section {
+                                authorizationBanner
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(
+                                        EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+                                    )
+                                    .listRowBackground(Color.clear)
+                            }
+                        }
 
-                    // MARK: - Authorization Banner
-                    if !screenTimeManager.isAuthorized {
-                        authorizationBanner
+                        // MARK: - Focus Groups
+                        if screenTimeManager.isAuthorized {
+                            if focusGroups.isEmpty {
+                                Section {
+                                    emptyState
+                                        .listRowSeparator(.hidden)
+                                        .listRowInsets(
+                                            EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+                                        )
+                                        .listRowBackground(Color.clear)
+                                }
+                            } else {
+                                Section {
+                                    Text("Focus Groups")
+                                        .font(.headline)
+                                        .listRowSeparator(.hidden)
+                                        .listRowInsets(
+                                            EdgeInsets(
+                                                top: 12, leading: 24, bottom: 4, trailing: 24)
+                                        )
+                                        .listRowBackground(Color.clear)
+
+                                    ForEach(focusGroups) { group in
+                                        ZStack {
+                                            FocusGroupRow(
+                                                group: group, screenTimeManager: screenTimeManager
+                                            )
+                                            .contentShape(Rectangle())
+
+                                            NavigationLink(
+                                                destination: FocusGroupDetailView(
+                                                    group: group,
+                                                    screenTimeManager: screenTimeManager)
+                                            ) {
+                                                Color.clear
+                                            }
+                                            .opacity(0)  // Hide the chevron
+                                        }
+                                        .listRowSeparator(.hidden)
+                                        .listRowInsets(
+                                            EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20)
+                                        )
+                                        .listRowBackground(
+                                            RoundedRectangle(cornerRadius: 14)
+                                                .fill(Color(.secondarySystemBackground))
+                                        )
+                                    }
+                                    .onDelete(perform: deleteGroupsList)
+                                }
+                            }
+
+                            // MARK: - Screen Time Statistics
+                            Section {
+                                statisticsSection
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(
+                                        EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0)
+                                    )
+                                    .listRowBackground(Color.clear)
+                            }
+                        }
                     }
-
-                    // MARK: - Focus Groups
-                    if focusGroups.isEmpty && screenTimeManager.isAuthorized {
-                        emptyState
-                    } else {
-                        focusGroupsList
-                    }
-
-                    // MARK: - Screen Time Statistics
-                    if screenTimeManager.isAuthorized {
-                        statisticsSection
-                    }
-
-                    Spacer(minLength: 80)
+                    .listStyle(.plain)
+                    .hideListSeparators()  // Use extension to match HabitView
+                    .background(Color(.systemBackground))
                 }
-                .padding(.top, 8)
-            }
 
-            // MARK: - FAB
-            if screenTimeManager.isAuthorized {
-                FAB {
-                    showCreateSheet = true
+                // MARK: - FAB
+                if screenTimeManager.isAuthorized {
+                    FAB {
+                        showCreateSheet = true
+                    }
+                    .padding(24)
                 }
-                .padding(.trailing, 20)
-                .padding(.bottom, 16)
             }
-        }
-        .onAppear {
-            screenTimeManager.checkAuthorization()
-        }
-        .onReceive(timer) { _ in
-            currentTime = Date()
-        }
-        .sheet(isPresented: $showCreateSheet) {
-            CreateFocusGroupView(screenTimeManager: screenTimeManager)
-        }
-        .sheet(item: $selectedGroup) { group in
-            FocusGroupDetailView(group: group, screenTimeManager: screenTimeManager)
+            .onAppear {
+                screenTimeManager.checkAuthorization()
+            }
+            .onReceive(timer) { _ in
+                currentTime = Date()
+            }
+            .sheet(isPresented: $showCreateSheet) {
+                CreateFocusGroupView(screenTimeManager: screenTimeManager)
+            }
         }
     }
 
@@ -111,7 +165,6 @@ struct FocusView: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.secondarySystemBackground))
         )
-        .padding(.horizontal, 16)
     }
 
     // MARK: - Empty State
@@ -132,31 +185,6 @@ struct FocusView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
-        .padding(.horizontal, 16)
-    }
-
-    // MARK: - Focus Groups List
-
-    private var focusGroupsList: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Focus Groups")
-                .font(.headline)
-                .padding(.horizontal, 16)
-
-            ForEach(focusGroups) { group in
-                FocusGroupRow(
-                    group: group,
-                    screenTimeManager: screenTimeManager,
-                    onTap: {
-                        selectedGroup = group
-                    },
-                    onDelete: {
-                        deleteGroup(group)
-                    }
-                )
-                .padding(.horizontal, 16)
-            }
-        }
     }
 
     // MARK: - Statistics Section
@@ -193,9 +221,13 @@ struct FocusView: View {
 
     // MARK: - Actions
 
-    private func deleteGroup(_ group: FocusGroup) {
-        screenTimeManager.removeGroup(group)
-        modelContext.delete(group)
+    private func deleteGroupsList(at offsets: IndexSet) {
+        for index in offsets {
+            let group = focusGroups[index]
+            screenTimeManager.removeGroup(group)
+            modelContext.delete(group)
+        }
+        try? modelContext.save()
     }
 }
 
@@ -204,151 +236,45 @@ struct FocusView: View {
 struct FocusGroupRow: View {
     @Bindable var group: FocusGroup
     let screenTimeManager: ScreenTimeManager
-    let onTap: () -> Void
-    let onDelete: () -> Void
-
-    @State private var showDeleteConfirmation = false
-    @State private var offset: CGFloat = 0
-    @State private var isSwiped = false
-
-    private let deleteButtonWidth: CGFloat = 80
 
     var body: some View {
-        ZStack(alignment: .trailing) {
-            // Delete button behind the row
-            Button {
-                showDeleteConfirmation = true
-            } label: {
-                VStack {
-                    Image(systemName: "trash")
-                        .font(.title3)
-                    Text("Delete")
-                        .font(.caption2)
-                }
-                .foregroundStyle(.white)
-                .frame(width: deleteButtonWidth, height: nil)
-                .frame(maxHeight: .infinity)
+        HStack(spacing: 14) {
+            // Icon
+            Image(systemName: group.icon)
+                .font(.title3)
+                .foregroundStyle(group.color)
+                .frame(width: 40, height: 40)
                 .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(.red)
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(group.color.opacity(0.15))
                 )
+
+            // Info
+            VStack(alignment: .leading, spacing: 3) {
+                Text(group.name)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Color.primary)
+
+                Text(group.scheduleDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
-            // Main row content
-            Button(action: {
-                if isSwiped {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        offset = 0
-                        isSwiped = false
+            Spacer()
+
+            // Toggle
+            Toggle(
+                "",
+                isOn: Binding(
+                    get: { group.isEnabled },
+                    set: { newValue in
+                        screenTimeManager.toggleGroup(group, enabled: newValue)
                     }
-                } else {
-                    onTap()
-                }
-            }) {
-                HStack(spacing: 14) {
-                    // Icon
-                    Image(systemName: group.icon)
-                        .font(.title3)
-                        .foregroundStyle(group.color)
-                        .frame(width: 40, height: 40)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(group.color.opacity(0.15))
-                        )
-
-                    // Info
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(group.name)
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(Color.primary)
-
-                        Text(group.scheduleDescription)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    // Toggle
-                    Toggle(
-                        "",
-                        isOn: Binding(
-                            get: { group.isEnabled },
-                            set: { newValue in
-                                screenTimeManager.toggleGroup(group, enabled: newValue)
-                            }
-                        )
-                    )
-                    .labelsHidden()
-                }
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color(.secondarySystemBackground))
                 )
-            }
-            .buttonStyle(.plain)
-            .offset(x: offset)
-            .gesture(
-                DragGesture(minimumDistance: 20)
-                    .onChanged { value in
-                        let translation = value.translation.width
-                        if isSwiped {
-                            // Already swiped open — allow dragging further left or back right
-                            let newOffset = -deleteButtonWidth + translation
-                            offset = min(0, max(-deleteButtonWidth * 1.5, newOffset))
-                        } else {
-                            // Only allow left swipe
-                            if translation < 0 {
-                                offset = max(-deleteButtonWidth * 1.5, translation)
-                            }
-                        }
-                    }
-                    .onEnded { value in
-                        let threshold = deleteButtonWidth * 0.4
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            if isSwiped {
-                                // If was open and dragged right past threshold, close
-                                if value.translation.width > threshold {
-                                    offset = 0
-                                    isSwiped = false
-                                } else {
-                                    offset = -deleteButtonWidth
-                                    isSwiped = true
-                                }
-                            } else {
-                                // If dragged left past threshold, open
-                                if -value.translation.width > threshold {
-                                    offset = -deleteButtonWidth
-                                    isSwiped = true
-                                } else {
-                                    offset = 0
-                                    isSwiped = false
-                                }
-                            }
-                        }
-                    }
             )
+            .labelsHidden()
         }
-        .clipped()
-        .contextMenu {
-            Button(role: .destructive) {
-                showDeleteConfirmation = true
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-        }
-        .confirmationDialog("Delete \"\(group.name)\"?", isPresented: $showDeleteConfirmation) {
-            Button("Delete", role: .destructive) {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    offset = 0
-                    isSwiped = false
-                }
-                onDelete()
-            }
-        } message: {
-            Text("This will remove the focus group and lift any active blocks.")
-        }
+        .padding(14)
     }
 }
 

@@ -40,7 +40,8 @@ struct TotalActivityReport: DeviceActivityReportScene {
 
     let content: (ActivityReportData) -> TotalActivityView
 
-    func makeConfiguration(representing data: DeviceActivityResults<DeviceActivityData>) async
+    nonisolated func makeConfiguration(representing data: DeviceActivityResults<DeviceActivityData>)
+        async
         -> ActivityReportData
     {
         var totalDuration: TimeInterval = 0
