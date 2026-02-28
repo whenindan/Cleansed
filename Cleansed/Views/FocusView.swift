@@ -83,8 +83,7 @@ struct FocusView: View {
                                             EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20)
                                         )
                                         .listRowBackground(
-                                            RoundedRectangle(cornerRadius: 14)
-                                                .fill(Color(.secondarySystemBackground))
+                                            Color.clear
                                         )
                                     }
                                     .onDelete(perform: deleteGroupsList)
@@ -163,7 +162,7 @@ struct FocusView: View {
         .padding(24)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.secondarySystemBackground))
+                .stroke(Color.primary.opacity(0.3), lineWidth: 1)
         )
     }
 
@@ -213,7 +212,7 @@ struct FocusView: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.secondarySystemBackground))
+                    .stroke(Color.primary.opacity(0.3), lineWidth: 1)
             )
             .padding(.horizontal, 16)
         }
