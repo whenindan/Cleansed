@@ -256,7 +256,7 @@ struct CreateFocusGroupView: View {
                 let bgColor: Color = name.isEmpty ? .secondary : accentColor
                 Text("Create Focus Group")
                     .font(.headline)
-                    .foregroundStyle(Color(.systemBackground))
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(bgColor)

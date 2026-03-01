@@ -90,15 +90,15 @@ struct FocusView: View {
                                 }
                             }
 
-                            // MARK: - Screen Time Statistics
-                            Section {
-                                statisticsSection
-                                    .listRowSeparator(.hidden)
-                                    .listRowInsets(
-                                        EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0)
-                                    )
-                                    .listRowBackground(Color.clear)
-                            }
+                            //                            // MARK: - Screen Time Statistics
+                            //                            Section {
+                            //                                statisticsSection
+                            //                                    .listRowSeparator(.hidden)
+                            //                                    .listRowInsets(
+                            //                                        EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0)
+                            //                                    )
+                            //                                    .listRowBackground(Color.clear)
+                            //                            }
                         }
                     }
                     .listStyle(.plain)
@@ -151,10 +151,10 @@ struct FocusView: View {
             } label: {
                 Text("Grant Access")
                     .font(.headline)
-                    .foregroundStyle(Color(.systemBackground))
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.primary)
+                    .background(Color.accentColor)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .padding(.top, 4)
