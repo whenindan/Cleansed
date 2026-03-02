@@ -113,6 +113,7 @@
 		FD7AE1DC2F4D6119004918C7 /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
 		FD7AE1EE2F4D6147004918C7 /* ShieldActionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShieldActionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD7AE2032F4D6175004918C7 /* DeviceActivityReportExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = DeviceActivityReportExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FD7B9F7D2F551A99002E5F51 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		FDD2B1482F40A8DF008572F8 /* Cleansed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cleansed.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDD2B1552F40A8E1008572F8 /* CleansedTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CleansedTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDD2B15F2F40A8E1008572F8 /* CleansedUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CleansedUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -344,6 +345,7 @@
 		FDD2B13F2F40A8DF008572F8 = {
 			isa = PBXGroup;
 			children = (
+				FD7B9F7D2F551A99002E5F51 /* Config.xcconfig */,
 				FDFA88C72F44B44800792EFD /* TodoWidgetExtension.entitlements */,
 				FDD2B14A2F40A8DF008572F8 /* Cleansed */,
 				FDD2B1582F40A8E1008572F8 /* CleansedTests */,
