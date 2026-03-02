@@ -18,6 +18,7 @@
 		FD7AE1EF2F4D6147004918C7 /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD7AE1BD2F4D5F97004918C7 /* ManagedSettings.framework */; };
 		FD7AE1F72F4D6147004918C7 /* ShieldActionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FD7AE1EE2F4D6147004918C7 /* ShieldActionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FD7AE20F2F4D6175004918C7 /* DeviceActivityReportExtension.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = FD7AE2032F4D6175004918C7 /* DeviceActivityReportExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FD7B9EF82F55138B002E5F51 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = FD7B9EF72F55138B002E5F51 /* Supabase */; };
 		FDFA88AA2F44B14500792EFD /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FDFA88A92F44B14500792EFD /* WidgetKit.framework */; };
 		FDFA88AC2F44B14500792EFD /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FDFA88AB2F44B14500792EFD /* SwiftUI.framework */; };
 		FDFA88BB2F44B14800792EFD /* TodoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FDFA88A72F44B14500792EFD /* TodoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -307,6 +308,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FD7B9EF82F55138B002E5F51 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -499,6 +501,7 @@
 			);
 			name = Cleansed;
 			packageProductDependencies = (
+				FD7B9EF72F55138B002E5F51 /* Supabase */,
 			);
 			productName = Cleansed;
 			productReference = FDD2B1482F40A8DF008572F8 /* Cleansed.app */;
@@ -619,6 +622,9 @@
 			);
 			mainGroup = FDD2B13F2F40A8DF008572F8;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				FD7B9EF62F55138B002E5F51 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FDD2B1492F40A8DF008572F8 /* Products */;
 			projectDirPath = "";
@@ -1431,6 +1437,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FD7B9EF62F55138B002E5F51 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FD7B9EF72F55138B002E5F51 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FD7B9EF62F55138B002E5F51 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = FDD2B1402F40A8DF008572F8 /* Project object */;
 }
