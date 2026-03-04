@@ -11,23 +11,18 @@ import SwiftUI
 struct TodoView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject var auth: AuthManager
     @Query(sort: \TodoItem.createdAt, order: .reverse) private var todos: [TodoItem]
 
     /// Incomplete first (Oldest sortDate -> Newest), then Completed (Most recently completed -> Oldest).
-    /// - New items appear at the BOTTOM of Incomplete list (near action area).
-    /// - Unchecked items appear at the BOTTOM of Incomplete list (near where they were clicked).
-    /// - Completed items appear at the TOP of Completed list (near where they were clicked).
     private var sortedTodos: [TodoItem] {
         todos.sorted {
             if $0.isCompleted != $1.isCompleted { return !$0.isCompleted }
-
             if $0.isCompleted {
-                // Completed: Most recently completed at the top
                 let d0 = $0.completedAt ?? $0.createdAt
                 let d1 = $1.completedAt ?? $1.createdAt
                 return d0 > d1
             } else {
-                // Incomplete: Oldest sortDate first (New items at bottom)
                 return $0.sortDate < $1.sortDate
             }
         }
@@ -40,8 +35,6 @@ struct TodoView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             VStack(alignment: .leading, spacing: 0) {
-                // Title removed as requested
-
                 if todos.isEmpty {
                     ContentUnavailableView(
                         "All clear",
@@ -59,10 +52,17 @@ struct TodoView: View {
                                         todo.completedAt = Date()
                                     } else {
                                         todo.completedAt = nil
-                                        todo.sortDate = Date()  // Move to bottom of incomplete list
+                                        todo.sortDate = Date()
                                     }
                                     try? modelContext.save()
                                     TodoManager.shared.syncTodosToUserDefaults(todos)
+                                    // Mirror to Supabase if signed in
+                                    if auth.isAuthenticated {
+                                        Task {
+                                            try? await SupabaseManager.shared.completeTodo(
+                                                id: todo.id, isCompleted: todo.isCompleted)
+                                        }
+                                    }
                                 }
                             } label: {
                                 Text(todo.title)
@@ -79,9 +79,7 @@ struct TodoView: View {
                                 EdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24))
                         }
                         .onDelete(perform: deleteTodos)
-                        .onMove { from, to in
-                            // no-op: list handles visual move, real order is driven by sort
-                        }
+                        .onMove { from, to in }
                     }
                     .animation(
                         .spring(response: 0.4, dampingFraction: 0.75), value: sortedTodos.map(\.id)
@@ -92,37 +90,33 @@ struct TodoView: View {
             }
             .background(Color(.systemBackground))
             .onChange(of: todos) { _, newTodos in
-                // Sync todos to UserDefaults for widget access
                 TodoManager.shared.syncTodosToUserDefaults(newTodos)
             }
             .onAppear {
-                // Sync changes from widget back to app
                 syncFromWidget()
-
-                // Sync todos to UserDefaults for widget
                 TodoManager.shared.syncTodosToUserDefaults(todos)
             }
             .onChange(of: scenePhase) { _, newPhase in
-                if newPhase == .active {
-                    // Sync widget changes back to app when returning to foreground
-                    syncFromWidget()
+                if newPhase == .active { syncFromWidget() }
+            }
+            .task {
+                // Load account todos from Supabase on appear when signed in
+                if auth.isAuthenticated, let userId = auth.currentUserId {
+                    await DataSyncManager.shared.loadFromSupabase(
+                        userId: userId, context: modelContext)
+                    TodoManager.shared.syncTodosToUserDefaults(todos)
                 }
             }
 
-            // FAB
-            FAB {
-                isAddSheetPresented = true
-            }
-            .padding(24)
+            FAB { isAddSheetPresented = true }
+                .padding(24)
         }
         .sheet(isPresented: $isAddSheetPresented) {
             NavigationStack {
                 Form {
                     TextField("New Task", text: $newTodoTitle)
                         .focused($isFocused)
-                        .onSubmit {
-                            addTodo()
-                        }
+                        .onSubmit { addTodo() }
                 }
                 .navigationTitle("New Task")
                 .navigationBarTitleDisplayMode(.inline)
@@ -134,62 +128,63 @@ struct TodoView: View {
                         }
                     }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Add") {
-                            addTodo()
-                        }
-                        .disabled(
-                            newTodoTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        Button("Add") { addTodo() }
+                            .disabled(
+                                newTodoTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            )
                     }
                 }
-                .onAppear {
-                    isFocused = true
-                }
+                .onAppear { isFocused = true }
             }
             .presentationDetents([.height(180)])
         }
     }
 
+    // MARK: - Actions
+
     private func addTodo() {
-        let trimmedTitle = newTodoTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedTitle.isEmpty else { return }
+        let trimmed = newTodoTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
 
-        let newTodo = TodoItem(title: trimmedTitle)
-        // sortDate defaults to Date(), putting it at the bottom
+        let newTodo = TodoItem(title: trimmed)
         modelContext.insert(newTodo)
+        try? modelContext.save()
+        newTodoTitle = ""
+        isAddSheetPresented = false
 
-        do {
-            try modelContext.save()
-            newTodoTitle = ""
-            isAddSheetPresented = false
-        } catch {
-            print("Failed to save context: \(error)")
+        // Mirror to Supabase if signed in
+        if auth.isAuthenticated, let userId = auth.currentUserId {
+            Task {
+                try? await SupabaseManager.shared.createTodoWithId(
+                    id: newTodo.id, title: newTodo.title,
+                    isCompleted: false, completedAt: nil,
+                    sortDate: newTodo.sortDate, userId: userId)
+            }
         }
     }
 
     private func deleteTodos(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(sortedTodos[index])
+        let toDelete = offsets.map { sortedTodos[$0] }
+        for todo in toDelete {
+            if auth.isAuthenticated {
+                Task { try? await SupabaseManager.shared.deleteTodo(id: todo.id) }
+            }
+            modelContext.delete(todo)
         }
         try? modelContext.save()
     }
 
     private func syncFromWidget() {
-        // Get todos from UserDefaults (updated by widget)
         let widgetTodos = TodoManager.shared.getTodosFromUserDefaults()
-
-        // Update SwiftData todos to match widget changes
         for widgetTodo in widgetTodos {
-            if let existingTodo = todos.first(where: { $0.id == widgetTodo.id }) {
-                // Update properties if they changed
-                if existingTodo.isCompleted != widgetTodo.isCompleted {
-                    existingTodo.isCompleted = widgetTodo.isCompleted
-                    existingTodo.completedAt = widgetTodo.completedAt
-                    // Also sync sortDate if available (though Widget effectively sets it to Date() on uncheck)
-                    existingTodo.sortDate = widgetTodo.sortDate
+            if let existing = todos.first(where: { $0.id == widgetTodo.id }) {
+                if existing.isCompleted != widgetTodo.isCompleted {
+                    existing.isCompleted = widgetTodo.isCompleted
+                    existing.completedAt = widgetTodo.completedAt
+                    existing.sortDate = widgetTodo.sortDate
                 }
             }
         }
-
         try? modelContext.save()
     }
 }
@@ -197,4 +192,5 @@ struct TodoView: View {
 #Preview {
     TodoView()
         .modelContainer(for: TodoItem.self, inMemory: true)
+        .environmentObject(AuthManager())
 }

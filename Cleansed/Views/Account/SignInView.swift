@@ -1,7 +1,12 @@
+import SwiftData
 import SwiftUI
 
 struct SignInView: View {
     @EnvironmentObject var auth: AuthManager
+    @Environment(\.modelContext) private var modelContext
+    @Query private var localTodos: [TodoItem]
+    @Query private var localHabits: [Habit]
+
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var isPasswordVisible: Bool = false
@@ -11,8 +16,7 @@ struct SignInView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Spacer()
-                .frame(height: 20)
+            Spacer().frame(height: 20)
 
             Text(isSignUp ? "Create Account" : "Welcome Back")
                 .font(.title2.bold())
@@ -34,10 +38,7 @@ struct SignInView: View {
                 } else {
                     SecureField("Enter your password", text: $password)
                 }
-
-                Button(action: {
-                    isPasswordVisible.toggle()
-                }) {
+                Button(action: { isPasswordVisible.toggle() }) {
                     Image(systemName: isPasswordVisible ? "eye" : "eye.slash")
                         .foregroundColor(.secondary)
                 }
@@ -54,22 +55,18 @@ struct SignInView: View {
                     .multilineTextAlignment(.center)
             }
 
-            // Forgot Password (sign-in only)
+            // Forgot Password
             if !isSignUp {
                 HStack {
                     Spacer()
-                    Button("Forgot Password?") {
-                        // TODO: implement password reset
-                    }
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    Button("Forgot Password?") {}
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
             }
 
-            // Primary Button
-            Button(action: {
-                Task { await submit() }
-            }) {
+            // Primary auth button
+            Button(action: { Task { await submit() } }) {
                 Group {
                     if isLoading {
                         ProgressView().tint(.white)
@@ -96,27 +93,31 @@ struct SignInView: View {
             .font(.subheadline)
             .foregroundColor(.secondary)
 
-            // Divider with "Or Login with"
+            // Divider
             HStack {
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundColor(Color.gray.opacity(0.3))
+                Rectangle().frame(height: 1).foregroundColor(Color.gray.opacity(0.3))
                 Text("Or Login with")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .layoutPriority(1)
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundColor(Color.gray.opacity(0.3))
+                Rectangle().frame(height: 1).foregroundColor(Color.gray.opacity(0.3))
             }
             .padding(.top, 10)
 
-            // Social Login Buttons
+            // Social buttons
             HStack(spacing: 16) {
-                socialButton(iconName: "f.square.fill", label: "Facebook", color: .blue)
-                socialButton(iconName: "g.circle.fill", label: "Google", color: .red)
-                socialButton(iconName: "apple.logo", label: "Apple", color: .primary)
+                socialButton(iconName: "f.square.fill", color: .blue)
+                socialButton(iconName: "g.circle.fill", color: .red)
+                socialButton(iconName: "apple.logo", color: .primary)
             }
+
+            // Guest mode
+            Button("Continue as Guest") {
+                auth.continueAsGuest()
+            }
+            .font(.subheadline)
+            .foregroundColor(.secondary)
+            .padding(.top, 8)
 
             Spacer()
         }
@@ -125,16 +126,35 @@ struct SignInView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    // MARK: - Auth action
+    // MARK: - Auth
 
     private func submit() async {
         isLoading = true
         errorMessage = nil
+        let wasGuest = auth.isGuest
+
+        // Snapshot before auth clears guest state
+        let todosToMigrate = wasGuest ? localTodos : []
+        let habitsToMigrate = wasGuest ? localHabits : []
+
         do {
             if isSignUp {
                 try await auth.signUp(email: email, password: password)
             } else {
                 try await auth.signIn(email: email, password: password)
+            }
+
+            // Migrate guest data if we just transitioned from guest to account
+            if wasGuest, let userId = auth.currentUserId {
+                await DataSyncManager.shared.migrateGuestData(
+                    userId: userId,
+                    localTodos: todosToMigrate,
+                    localHabits: habitsToMigrate,
+                    context: modelContext
+                )
+            } else if let userId = auth.currentUserId {
+                // Normal sign-in: load account data from Supabase
+                await DataSyncManager.shared.loadFromSupabase(userId: userId, context: modelContext)
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -143,10 +163,8 @@ struct SignInView: View {
     }
 
     @ViewBuilder
-    private func socialButton(iconName: String, label: String, color: Color) -> some View {
-        Button(action: {
-            // TODO: implement social OAuth
-        }) {
+    private func socialButton(iconName: String, color: Color) -> some View {
+        Button(action: {}) {
             Image(systemName: iconName)
                 .font(.title)
                 .foregroundColor(color)

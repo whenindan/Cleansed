@@ -10,6 +10,7 @@ import SwiftUI
 
 struct HabitView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject var auth: AuthManager
     @Query(sort: \Habit.createdAt) private var habits: [Habit]
 
     @State private var isAddSheetPresented = false
@@ -21,8 +22,6 @@ struct HabitView: View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
                 VStack(alignment: .leading, spacing: 0) {
-                    // Title removed as requested
-
                     if habits.isEmpty {
                         ContentUnavailableView(
                             "No Habits",
@@ -35,12 +34,11 @@ struct HabitView: View {
                             ForEach(habits) { habit in
                                 ZStack {
                                     HabitRowView(habit: habit)
-                                        .contentShape(Rectangle())  // Ensure gaps in VStack are tappable
-
+                                        .contentShape(Rectangle())
                                     NavigationLink(destination: HabitDetailView(habit: habit)) {
                                         Color.clear
                                     }
-                                    .opacity(0)  // Hide the chevron
+                                    .opacity(0)
                                 }
                                 .listRowSeparator(.hidden)
                                 .listRowInsets(
@@ -58,10 +56,15 @@ struct HabitView: View {
                 }
                 .background(Color(.systemBackground))
 
-                FAB {
-                    isAddSheetPresented = true
+                FAB { isAddSheetPresented = true }
+                    .padding(24)
+            }
+            .task {
+                // Load account habits from Supabase on appear when signed in
+                if auth.isAuthenticated, let userId = auth.currentUserId {
+                    await DataSyncManager.shared.loadFromSupabase(
+                        userId: userId, context: modelContext)
                 }
-                .padding(24)
             }
             .sheet(isPresented: $isAddSheetPresented) {
                 NavigationStack {
@@ -69,9 +72,7 @@ struct HabitView: View {
                         Section {
                             TextField("Habit Name", text: $newHabitName)
                                 .focused($isFocused)
-                                .onSubmit {
-                                    addHabit()
-                                }
+                                .onSubmit { addHabit() }
 
                             DatePicker(
                                 "Start Date",
@@ -92,30 +93,37 @@ struct HabitView: View {
                             }
                         }
                         ToolbarItem(placement: .confirmationAction) {
-                            Button("Add") {
-                                addHabit()
-                            }
-                            .disabled(
-                                newHabitName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                            )
+                            Button("Add") { addHabit() }
+                                .disabled(
+                                    newHabitName.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        .isEmpty)
                         }
                     }
-                    .onAppear {
-                        isFocused = true
-                    }
+                    .onAppear { isFocused = true }
                 }
                 .presentationDetents([.height(240)])
             }
         }
     }
 
-    private func addHabit() {
-        let trimmedName = newHabitName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty else { return }
+    // MARK: - Actions
 
-        let newHabit = Habit(name: trimmedName, startDate: newHabitStartDate)
+    private func addHabit() {
+        let trimmed = newHabitName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        let newHabit = Habit(name: trimmed, startDate: newHabitStartDate)
         modelContext.insert(newHabit)
         try? modelContext.save()
+
+        // Mirror to Supabase if signed in
+        if auth.isAuthenticated, let userId = auth.currentUserId {
+            Task {
+                try? await SupabaseManager.shared.createHabitWithId(
+                    id: newHabit.id, name: newHabit.name,
+                    userId: userId, startDate: newHabit.startDate)
+            }
+        }
 
         newHabitName = ""
         newHabitStartDate = Date()
@@ -124,7 +132,11 @@ struct HabitView: View {
 
     private func deleteHabits(at offsets: IndexSet) {
         for index in offsets {
-            modelContext.delete(habits[index])
+            let habit = habits[index]
+            if auth.isAuthenticated {
+                Task { try? await SupabaseManager.shared.deleteHabit(id: habit.id) }
+            }
+            modelContext.delete(habit)
         }
         try? modelContext.save()
     }
@@ -133,4 +145,5 @@ struct HabitView: View {
 #Preview {
     HabitView()
         .modelContainer(for: [Habit.self, HabitCompletion.self], inMemory: true)
+        .environmentObject(AuthManager())
 }

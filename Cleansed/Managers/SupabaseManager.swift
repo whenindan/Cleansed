@@ -57,9 +57,24 @@ class SupabaseManager {
         return
             try await supabase
             .from("habits")
-            .insert([
-                "user_id": userId.uuidString,
-                "name": name,
+            .insert(["user_id": userId.uuidString, "name": name, "start_date": dateStr])
+            .select()
+            .single()
+            .execute()
+            .value
+    }
+
+    /// Upsert habit preserving a specific UUID (used for guest migration).
+    @discardableResult
+    func createHabitWithId(id: UUID, name: String, userId: UUID, startDate: Date) async throws
+        -> HabitRecord
+    {
+        let dateStr = dateFormatter.string(from: startDate)
+        return
+            try await supabase
+            .from("habits")
+            .upsert([
+                "id": id.uuidString, "user_id": userId.uuidString, "name": name,
                 "start_date": dateStr,
             ])
             .select()
@@ -102,8 +117,19 @@ class SupabaseManager {
         try await supabase
             .from("habit_completions")
             .upsert([
-                "habit_id": habitId.uuidString,
-                "user_id": userId.uuidString,
+                "habit_id": habitId.uuidString, "user_id": userId.uuidString,
+                "completed_date": dateStr,
+            ])
+            .execute()
+    }
+
+    /// Upsert completion preserving a specific UUID (used for guest migration).
+    func logCompletionWithId(id: UUID, habitId: UUID, userId: UUID, date: Date) async throws {
+        let dateStr = dateFormatter.string(from: date)
+        try await supabase
+            .from("habit_completions")
+            .upsert([
+                "id": id.uuidString, "habit_id": habitId.uuidString, "user_id": userId.uuidString,
                 "completed_date": dateStr,
             ])
             .execute()
@@ -136,10 +162,33 @@ class SupabaseManager {
         return
             try await supabase
             .from("todo_items")
-            .insert([
-                "user_id": userId.uuidString,
-                "title": title,
-            ])
+            .insert(["user_id": userId.uuidString, "title": title])
+            .select()
+            .single()
+            .execute()
+            .value
+    }
+
+    /// Upsert todo preserving a specific UUID (used for guest migration).
+    @discardableResult
+    func createTodoWithId(
+        id: UUID, title: String, isCompleted: Bool,
+        completedAt: Date?, sortDate: Date, userId: UUID
+    ) async throws -> TodoRecord {
+        var payload: [String: String] = [
+            "id": id.uuidString,
+            "user_id": userId.uuidString,
+            "title": title,
+            "is_completed": isCompleted ? "true" : "false",
+            "sort_date": ISO8601DateFormatter().string(from: sortDate),
+        ]
+        if let completedAt {
+            payload["completed_at"] = ISO8601DateFormatter().string(from: completedAt)
+        }
+        return
+            try await supabase
+            .from("todo_items")
+            .upsert(payload)
             .select()
             .single()
             .execute()
@@ -157,7 +206,6 @@ class SupabaseManager {
                 .eq("id", value: id.uuidString)
                 .execute()
         } else {
-            // Undo completion — clear completed_at
             try await supabase
                 .from("todo_items")
                 .update(["is_completed": "false"])

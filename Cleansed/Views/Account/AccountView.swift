@@ -1,12 +1,14 @@
+import SwiftData
 import SwiftUI
 
 struct AccountView: View {
     @EnvironmentObject var auth: AuthManager
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         NavigationStack {
             List {
-                // Account section — shows email if signed in, or Sign In link
+                // Account section
                 Section {
                     if auth.isAuthenticated {
                         if let email = auth.currentUserEmail {
@@ -15,10 +17,19 @@ struct AccountView: View {
                         }
                         Button(role: .destructive) {
                             Task {
+                                // Clear local mirror data before signing out
+                                DataSyncManager.shared.clearLocalData(context: modelContext)
                                 try? await auth.signOut()
                             }
                         } label: {
                             Label("Sign Out", systemImage: "arrow.backward.circle")
+                        }
+                    } else if auth.isGuest {
+                        Label("Guest", systemImage: "person.circle")
+                            .foregroundStyle(Color.secondary)
+                        NavigationLink(destination: SignInView().environmentObject(auth)) {
+                            Label("Create Account or Sign In", systemImage: "arrow.right.circle")
+                                .foregroundStyle(Color.primary)
                         }
                     } else {
                         NavigationLink(destination: SignInView().environmentObject(auth)) {
@@ -34,7 +45,6 @@ struct AccountView: View {
                     NavigationLink(destination: SettingsView()) {
                         Label("Settings", systemImage: "gear")
                     }
-
                     NavigationLink(destination: WidgetSettingsView()) {
                         Label("Widget", systemImage: "square.stack.3d.up.fill")
                     }
