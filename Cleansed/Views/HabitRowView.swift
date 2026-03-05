@@ -10,6 +10,7 @@ import SwiftUI
 
 struct HabitRowView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject var auth: AuthManager
     let habit: Habit
 
     private var last7Days: [Date] {
@@ -38,11 +39,27 @@ struct HabitRowView: View {
         }) {
             // Remove completion
             modelContext.delete(existingCompletion)
+            if auth.isAuthenticated {
+                Task {
+                    try? await SupabaseManager.shared.removeCompletion(
+                        habitId: habit.id, date: targetDay)
+                }
+            }
         } else {
             // Add completion
             let newCompletion = HabitCompletion(date: targetDay, habit: habit)
             modelContext.insert(newCompletion)
             habit.completions.append(newCompletion)
+            if auth.isAuthenticated, let userId = auth.currentUserId {
+                Task {
+                    try? await SupabaseManager.shared.logCompletionWithId(
+                        id: newCompletion.id,
+                        habitId: habit.id,
+                        userId: userId,
+                        date: targetDay
+                    )
+                }
+            }
         }
     }
 
@@ -70,7 +87,9 @@ struct HabitRowView: View {
 
             // Bottom Row: Week Days
             HStack(spacing: 0) {
-                ForEach(last7Days, id: \.self) { date in
+                let days = last7Days
+                ForEach(0..<days.count, id: \.self) { index in
+                    let date = days[index]
                     DayCircleView(
                         date: date,
                         isCompleted: isDateCompleted(date),

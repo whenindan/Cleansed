@@ -5,6 +5,7 @@ struct HabitDetailView: View {
     let habit: Habit
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject var auth: AuthManager
     @State private var selectedMonth: Date = Date()
 
     // TEST MODE: Set to true to enable calendar editing for testing
@@ -159,11 +160,27 @@ struct HabitDetailView: View {
         }) {
             // Remove completion
             modelContext.delete(existingCompletion)
+            if auth.isAuthenticated {
+                Task {
+                    try? await SupabaseManager.shared.removeCompletion(
+                        habitId: habit.id, date: targetDay)
+                }
+            }
         } else {
             // Add completion
             let newCompletion = HabitCompletion(date: targetDay, habit: habit)
             modelContext.insert(newCompletion)
             habit.completions.append(newCompletion)
+            if auth.isAuthenticated, let userId = auth.currentUserId {
+                Task {
+                    try? await SupabaseManager.shared.logCompletionWithId(
+                        id: newCompletion.id,
+                        habitId: habit.id,
+                        userId: userId,
+                        date: targetDay
+                    )
+                }
+            }
         }
 
         try? modelContext.save()

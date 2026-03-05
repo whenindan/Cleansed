@@ -12,7 +12,8 @@ let supabase = SupabaseClient(
     options: SupabaseClientOptions(
         auth: SupabaseClientOptions.AuthOptions(
             // Fixes: "Initial session emitted after attempting to refresh the local stored session"
-            autoRefreshToken: true
+            autoRefreshToken: true,
+            emitLocalSessionAsInitialSession: true
         )
     )
 )
