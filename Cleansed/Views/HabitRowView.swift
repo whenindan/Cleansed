@@ -39,6 +39,7 @@ struct HabitRowView: View {
         }) {
             // Remove completion
             modelContext.delete(existingCompletion)
+            HabitWidgetManager.shared.toggleHabitCompletion(id: habit.id, date: targetDay)
             if auth.isAuthenticated {
                 Task {
                     try? await SupabaseManager.shared.removeCompletion(
@@ -50,6 +51,7 @@ struct HabitRowView: View {
             let newCompletion = HabitCompletion(date: targetDay, habit: habit)
             modelContext.insert(newCompletion)
             habit.completions.append(newCompletion)
+            HabitWidgetManager.shared.toggleHabitCompletion(id: habit.id, date: targetDay)
             if auth.isAuthenticated, let userId = auth.currentUserId {
                 Task {
                     try? await SupabaseManager.shared.logCompletionWithId(
