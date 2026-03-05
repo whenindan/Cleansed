@@ -145,6 +145,14 @@ class SupabaseManager {
             .execute()
     }
 
+    func deleteCompletion(id: UUID) async throws {
+        try await supabase
+            .from("habit_completions")
+            .delete()
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
     // MARK: - Todo Items
 
     func fetchTodos(userId: UUID) async throws -> [TodoRecord] {

@@ -10,6 +10,7 @@ import SwiftUI
 
 struct HabitView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject var auth: AuthManager
     @Query(sort: \Habit.createdAt) private var habits: [Habit]
 
@@ -56,6 +57,16 @@ struct HabitView: View {
                     }
                 }
                 .background(Color(.systemBackground))
+                .onChange(of: habits) { _, newHabits in
+                    HabitWidgetManager.shared.syncHabitsToUserDefaults(newHabits)
+                }
+                .onAppear {
+                    syncFromWidget()
+                    HabitWidgetManager.shared.syncHabitsToUserDefaults(habits)
+                }
+                .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase == .active { syncFromWidget() }
+                }
 
                 FAB { isAddSheetPresented = true }
                     .padding(24)
@@ -140,6 +151,54 @@ struct HabitView: View {
             modelContext.delete(habit)
         }
         try? modelContext.save()
+    }
+
+    private func syncFromWidget() {
+        let calendar = Calendar.current
+        let widgetHabits = HabitWidgetManager.shared.getHabitsFromUserDefaults()
+
+        for widgetHabit in widgetHabits {
+            if let existing = habits.first(where: { $0.id == widgetHabit.id }) {
+                let existingDates = Set(
+                    existing.completions.map { calendar.startOfDay(for: $0.date) })
+                let widgetDates = Set(
+                    widgetHabit.completedDates.map { calendar.startOfDay(for: $0) })
+
+                let today = calendar.startOfDay(for: Date())
+                let isCompletedInWidget = widgetDates.contains(today)
+                let isCompletedInSwiftData = existingDates.contains(today)
+
+                if isCompletedInWidget && !isCompletedInSwiftData {
+                    // Added in widget
+                    let newCompletion = HabitCompletion(date: Date(), habit: existing)
+                    modelContext.insert(newCompletion)
+                    try? modelContext.save()
+
+                    if auth.isAuthenticated, let userId = auth.currentUserId {
+                        Task {
+                            try? await SupabaseManager.shared.logCompletionWithId(
+                                id: newCompletion.id,
+                                habitId: existing.id,
+                                userId: userId,
+                                date: newCompletion.date
+                            )
+                        }
+                    }
+                } else if !isCompletedInWidget && isCompletedInSwiftData {
+                    // Removed in widget
+                    if let completionToRemove = existing.completions.first(where: {
+                        calendar.isDate($0.date, inSameDayAs: today)
+                    }) {
+                        if auth.isAuthenticated {
+                            let compId = completionToRemove.id
+                            Task { try? await SupabaseManager.shared.deleteCompletion(id: compId) }
+                        }
+                        modelContext.delete(completionToRemove)
+                        try? modelContext.save()
+                    }
+                }
+            }
+        }
     }
 }
 

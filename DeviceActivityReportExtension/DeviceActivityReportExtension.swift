@@ -11,6 +11,7 @@ import SwiftUI
 
 @main
 struct CleansedReportExtension: DeviceActivityReportExtension {
+    @MainActor
     var body: some DeviceActivityReportScene {
         TotalActivityReport { totalActivity in
             TotalActivityView(totalActivity: totalActivity)
