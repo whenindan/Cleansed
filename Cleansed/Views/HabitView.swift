@@ -16,6 +16,7 @@ struct HabitView: View {
     @State private var isAddSheetPresented = false
     @State private var newHabitName = ""
     @State private var newHabitStartDate = Date()
+    @State private var hasSynced = false
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -60,11 +61,11 @@ struct HabitView: View {
                     .padding(24)
             }
             .task {
-                // Load account habits from Supabase on appear when signed in
-                if auth.isAuthenticated, let userId = auth.currentUserId {
-                    await DataSyncManager.shared.loadFromSupabase(
-                        userId: userId, context: modelContext)
+                guard !hasSynced, auth.isAuthenticated, let userId = auth.currentUserId else {
+                    return
                 }
+                hasSynced = true
+                await DataSyncManager.shared.loadFromSupabase(userId: userId, context: modelContext)
             }
             .sheet(isPresented: $isAddSheetPresented) {
                 NavigationStack {
