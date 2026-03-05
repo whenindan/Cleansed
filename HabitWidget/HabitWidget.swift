@@ -109,10 +109,13 @@ struct HabitWidgetContentView: View {
     let family: WidgetFamily
     let entry: HabitEntry
 
+    // TWEAK: Widget Margin / Padding
+    var widgetMargin: CGFloat { 14 }
+
     var body: some View {
         if let habit = entry.habit {
             HabitSingleView(habit: habit, family: family)
-                .padding(family == .systemSmall ? 14 : 18)
+                .padding(widgetMargin)
         } else {
             VStack {
                 Text("No Habit Selected")
@@ -136,8 +139,9 @@ struct HabitSingleView: View {
         return habit.completedDates.contains { calendar.isDate($0, inSameDayAs: Date()) }
     }
 
+    // TWEAK: Rows and Columns
     var rows: Int { 7 }
-    var cols: Int { family == .systemSmall ? 10 : 22 }
+    var cols: Int { family == .systemSmall ? 10 : 25 }  // 25 columns usually fills the medium widget entirely
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -180,31 +184,14 @@ struct HabitSingleView: View {
             Spacer(minLength: 0)
 
             // Contribution Grid
-            HabitContributionGrid(
-                completedDates: habit.completedDates,
-                themeColor: themeColor,
-                rows: rows,
-                cols: cols
-            )
-
-            if family == .systemSmall {
-                Spacer(minLength: 0)
-                HStack {
-                    Spacer()
-                    Text("HabitKit")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(.white)
-                    Spacer()
-                }
-            } else if family == .systemMedium {
-                Spacer(minLength: 0)
-                HStack {
-                    Spacer()
-                    Text("HabitKit")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white)
-                    Spacer()
-                }
+            HStack {
+                Spacer(minLength: 0)  // Pushes grid to the right, so the right-most is touching the edge
+                HabitContributionGrid(
+                    completedDates: habit.completedDates,
+                    themeColor: themeColor,
+                    rows: rows,
+                    cols: cols
+                )
             }
         }
     }
@@ -243,14 +230,18 @@ struct HabitContributionGrid: View {
         return grid
     }
 
+    // TWEAK: Grid Spacing and Corner Radius
+    var gridSpacing: CGFloat { 3 }
+    var squareCornerRadius: CGFloat { 2 }
+
     var body: some View {
         let grid = boolGrid
-        HStack(spacing: 3) {
+        HStack(spacing: gridSpacing) {
             ForEach(0..<cols, id: \.self) { col in
-                VStack(spacing: 3) {
+                VStack(spacing: gridSpacing) {
                     ForEach(0..<rows, id: \.self) { row in
                         let isCompleted = grid[row][col]
-                        RoundedRectangle(cornerRadius: 2)
+                        RoundedRectangle(cornerRadius: squareCornerRadius)
                             .fill(isCompleted ? themeColor : Color.white.opacity(0.12))
                             .aspectRatio(1, contentMode: .fit)
                     }
