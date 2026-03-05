@@ -7,30 +7,49 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-struct HabitProvider: TimelineProvider {
+@available(iOS 17.0, *)
+struct HabitProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> HabitEntry {
         let dummyDates = generateDummyDates()
         return HabitEntry(
             date: Date(),
-            habits: [
-                HabitWidgetData(
-                    id: UUID(), name: "Meditation", completedDates: dummyDates,
-                    colorTheme: "#A154F2")
-            ])
+            habit: HabitWidgetData(
+                id: UUID(), name: "Meditation", completedDates: dummyDates,
+                colorTheme: "#A154F2")
+        )
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (HabitEntry) -> Void) {
+    func snapshot(for configuration: SelectHabitIntent, in context: Context) async -> HabitEntry {
         let habits = HabitWidgetManager.shared.getHabitsFromUserDefaults()
-        let entry = HabitEntry(
-            date: Date(), habits: habits.isEmpty ? placeholder(in: context).habits : habits)
-        completion(entry)
+
+        // If the user selected a habit in the intent, try to find it
+        if let selectedId = configuration.habit?.id,
+            let selectedHabit = habits.first(where: { $0.id.uuidString == selectedId })
+        {
+            return HabitEntry(date: Date(), habit: selectedHabit)
+        }
+
+        // Fallback to the first available habit, or a placeholder
+        if let first = habits.first {
+            return HabitEntry(date: Date(), habit: first)
+        }
+
+        return placeholder(in: context)
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<HabitEntry>) -> Void) {
+    func timeline(for configuration: SelectHabitIntent, in context: Context) async -> Timeline<
+        HabitEntry
+    > {
         let habits = HabitWidgetManager.shared.getHabitsFromUserDefaults()
-        let entry = HabitEntry(date: Date(), habits: habits)
-        let timeline = Timeline(entries: [entry], policy: .never)
-        completion(timeline)
+
+        var currentHabit: HabitWidgetData? = nil
+        if let selectedId = configuration.habit?.id {
+            currentHabit = habits.first(where: { $0.id.uuidString == selectedId })
+        }
+
+        // If the user hasn't selected a habit, or the selected habit was deleted:
+        let entry = HabitEntry(date: Date(), habit: currentHabit)
+        return Timeline(entries: [entry], policy: .never)
     }
 
     private func generateDummyDates() -> [Date] {
@@ -48,11 +67,13 @@ struct HabitProvider: TimelineProvider {
     }
 }
 
+@available(iOS 17.0, *)
 struct HabitEntry: TimelineEntry {
     let date: Date
-    let habits: [HabitWidgetData]
+    let habit: HabitWidgetData?
 }
 
+@available(iOS 17.0, *)
 struct HabitWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
     var entry: HabitProvider.Entry
@@ -65,11 +86,14 @@ struct HabitWidgetEntryView: View {
 }
 
 // Widget Configuration
+@available(iOS 17.0, *)
 struct HabitWidget: Widget {
     let kind: String = "HabitWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: HabitProvider()) { entry in
+        AppIntentConfiguration(
+            kind: kind, intent: SelectHabitIntent.self, provider: HabitProvider()
+        ) { entry in
             HabitWidgetEntryView(entry: entry)
         }
         .supportedFamilies([.systemSmall, .systemMedium])
@@ -80,22 +104,20 @@ struct HabitWidget: Widget {
 }
 
 // ContentView
+@available(iOS 17.0, *)
 struct HabitWidgetContentView: View {
     let family: WidgetFamily
     let entry: HabitEntry
 
     var body: some View {
-        if entry.habits.isEmpty {
-            VStack {
-                Text("No Habits")
-                    .foregroundColor(.secondary)
-            }
+        if let habit = entry.habit {
+            HabitSingleView(habit: habit, family: family)
+                .padding(family == .systemSmall ? 14 : 18)
         } else {
-            // Display exactly one habit in small widget, maybe multiple in medium?
-            // User design screenshot showed single habit for both small and medium.
-            if let habit = entry.habits.first {
-                HabitSingleView(habit: habit, family: family)
-                    .padding(family == .systemSmall ? 14 : 18)
+            VStack {
+                Text("No Habit Selected")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 14))
             }
         }
     }

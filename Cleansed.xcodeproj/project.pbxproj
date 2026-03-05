@@ -209,6 +209,14 @@
 			);
 			target = FD7F058A2F59E7AA00894E3E /* HabitWidgetExtension */;
 		};
+		FD7F05AE2F59F13400894E3E /* Exceptions for "HabitWidget" folder in "Cleansed" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				HabitEntity.swift,
+				SelectHabitIntent.swift,
+			);
+			target = FDD2B1472F40A8DF008572F8 /* Cleansed */;
+		};
 		FDFA88C32F44B38D00792EFD /* Exceptions for "Cleansed" folder in "TodoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -271,6 +279,7 @@
 		FD7F058E2F59E7AA00894E3E /* HabitWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				FD7F05AE2F59F13400894E3E /* Exceptions for "HabitWidget" folder in "Cleansed" target */,
 				FD7F059E2F59E7AC00894E3E /* Exceptions for "HabitWidget" folder in "HabitWidgetExtension" target */,
 			);
 			path = HabitWidget;
