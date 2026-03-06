@@ -15,23 +15,25 @@ struct HabitProvider: AppIntentTimelineProvider {
             date: Date(),
             habit: HabitWidgetData(
                 id: UUID(), name: "Meditation", completedDates: dummyDates,
-                colorTheme: "#A154F2")
+                colorTheme: "#A154F2"),
+            colorHex: "#A154F2",
+            iconName: "flame.fill"
         )
     }
 
     func snapshot(for configuration: SelectHabitIntent, in context: Context) async -> HabitEntry {
         let habits = HabitWidgetManager.shared.getHabitsFromUserDefaults()
+        let colorHex = configuration.color.rawValue
+        let iconName = configuration.icon.rawValue
 
-        // If the user selected a habit in the intent, try to find it
         if let selectedId = configuration.habit?.id,
             let selectedHabit = habits.first(where: { $0.id.uuidString == selectedId })
         {
-            return HabitEntry(date: Date(), habit: selectedHabit)
+            return HabitEntry(date: Date(), habit: selectedHabit, colorHex: colorHex, iconName: iconName)
         }
 
-        // Fallback to the first available habit, or a placeholder
         if let first = habits.first {
-            return HabitEntry(date: Date(), habit: first)
+            return HabitEntry(date: Date(), habit: first, colorHex: colorHex, iconName: iconName)
         }
 
         return placeholder(in: context)
@@ -41,14 +43,15 @@ struct HabitProvider: AppIntentTimelineProvider {
         HabitEntry
     > {
         let habits = HabitWidgetManager.shared.getHabitsFromUserDefaults()
+        let colorHex = configuration.color.rawValue
+        let iconName = configuration.icon.rawValue
 
         var currentHabit: HabitWidgetData? = nil
         if let selectedId = configuration.habit?.id {
             currentHabit = habits.first(where: { $0.id.uuidString == selectedId })
         }
 
-        // If the user hasn't selected a habit, or the selected habit was deleted:
-        let entry = HabitEntry(date: Date(), habit: currentHabit)
+        let entry = HabitEntry(date: Date(), habit: currentHabit, colorHex: colorHex, iconName: iconName)
         return Timeline(entries: [entry], policy: .never)
     }
 
@@ -71,6 +74,8 @@ struct HabitProvider: AppIntentTimelineProvider {
 struct HabitEntry: TimelineEntry {
     let date: Date
     let habit: HabitWidgetData?
+    let colorHex: String
+    let iconName: String
 }
 
 @available(iOS 17.0, *)
@@ -114,7 +119,7 @@ struct HabitWidgetContentView: View {
 
     var body: some View {
         if let habit = entry.habit {
-            HabitSingleView(habit: habit, family: family)
+            HabitSingleView(habit: habit, family: family, colorHex: entry.colorHex, iconName: entry.iconName)
                 .padding(widgetMargin)
         } else {
             VStack {
@@ -129,9 +134,11 @@ struct HabitWidgetContentView: View {
 struct HabitSingleView: View {
     let habit: HabitWidgetData
     let family: WidgetFamily
+    let colorHex: String
+    let iconName: String
 
     var themeColor: Color {
-        Color(hex: habit.colorTheme) ?? .green
+        Color(hex: colorHex) ?? .green
     }
 
     var isCompletedToday: Bool {
@@ -152,7 +159,7 @@ struct HabitSingleView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(themeColor.opacity(0.15))
                         .frame(width: 32, height: 32)
-                    Image(systemName: "flame.fill")  // placeholder icon
+                    Image(systemName: iconName)
                         .font(.system(size: 16))
                         .foregroundColor(themeColor)
                 }
@@ -225,7 +232,7 @@ struct HabitContributionGrid: View {
 
         return grid
     }
-
+    
     // TWEAK: Grid Spacing and Corner Radius
     var gridSpacing: CGFloat { 3 }
     var squareCornerRadius: CGFloat { 2 }
