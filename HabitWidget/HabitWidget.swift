@@ -140,11 +140,11 @@ struct HabitSingleView: View {
     }
 
     // TWEAK: Rows and Columns
-    var rows: Int { 7 }
-    var cols: Int { family == .systemSmall ? 10 : 25 }  // 25 columns usually fills the medium widget entirely
+    var rows: Int { 8 }
+    var cols: Int { family == .systemSmall ? 12 : 26 }  // Adjust to fill perfectly
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             // Header
             HStack(spacing: 8) {
                 // Icon matching Mockup
@@ -181,18 +181,14 @@ struct HabitSingleView: View {
                 .buttonStyle(.plain)
             }
 
-            Spacer(minLength: 0)
-
-            // Contribution Grid
-            HStack {
-                Spacer(minLength: 0)  // Pushes grid to the right, so the right-most is touching the edge
-                HabitContributionGrid(
-                    completedDates: habit.completedDates,
-                    themeColor: themeColor,
-                    rows: rows,
-                    cols: cols
-                )
-            }
+            // Contribution Grid — fills all remaining space
+            HabitContributionGrid(
+                completedDates: habit.completedDates,
+                themeColor: themeColor,
+                rows: rows,
+                cols: cols
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }
@@ -236,14 +232,18 @@ struct HabitContributionGrid: View {
 
     var body: some View {
         let grid = boolGrid
-        HStack(spacing: gridSpacing) {
-            ForEach(0..<cols, id: \.self) { col in
-                VStack(spacing: gridSpacing) {
-                    ForEach(0..<rows, id: \.self) { row in
-                        let isCompleted = grid[row][col]
-                        RoundedRectangle(cornerRadius: squareCornerRadius)
-                            .fill(isCompleted ? themeColor : Color.white.opacity(0.12))
-                            .aspectRatio(1, contentMode: .fit)
+        GeometryReader { geo in
+            let totalHSpacing = CGFloat(cols - 1) * gridSpacing
+            let squareSize = (geo.size.width - totalHSpacing) / CGFloat(cols)
+            HStack(spacing: gridSpacing) {
+                ForEach(0..<cols, id: \.self) { col in
+                    VStack(spacing: gridSpacing) {
+                        ForEach(0..<rows, id: \.self) { row in
+                            let isCompleted = grid[row][col]
+                            RoundedRectangle(cornerRadius: squareCornerRadius)
+                                .fill(isCompleted ? themeColor : Color.white.opacity(0.12))
+                                .frame(width: squareSize, height: squareSize)
+                        }
                     }
                 }
             }
