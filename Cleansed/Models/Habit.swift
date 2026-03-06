@@ -14,6 +14,8 @@ final class Habit {
     var name: String
     var createdAt: Date
     var startDate: Date
+    var colorHex: String = ""
+    var iconName: String = ""
 
     @Relationship(deleteRule: .cascade, inverse: \HabitCompletion.habit)
     var completions: [HabitCompletion] = []

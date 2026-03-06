@@ -13,6 +13,24 @@ struct HabitWidgetData: Codable {
     let name: String
     let completedDates: [Date]
     let colorTheme: String
+    let iconName: String
+
+    init(id: UUID, name: String, completedDates: [Date], colorTheme: String, iconName: String = "flame.fill") {
+        self.id = id
+        self.name = name
+        self.completedDates = completedDates
+        self.colorTheme = colorTheme
+        self.iconName = iconName
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        completedDates = try container.decode([Date].self, forKey: .completedDates)
+        colorTheme = try container.decode(String.self, forKey: .colorTheme)
+        iconName = try container.decodeIfPresent(String.self, forKey: .iconName) ?? "flame.fill"
+    }
 }
 
 class HabitWidgetManager {
@@ -40,11 +58,14 @@ class HabitWidgetManager {
 
         let habitData = habits.map { habit in
             let validDates = habit.completions.map { $0.date }.filter { $0 >= cutoff }
+            let colorTheme = habit.colorHex.isEmpty ? getColor(for: habit.id) : habit.colorHex
+            let iconName = habit.iconName.isEmpty ? "flame.fill" : habit.iconName
             return HabitWidgetData(
                 id: habit.id,
                 name: habit.name,
                 completedDates: validDates,
-                colorTheme: getColor(for: habit.id)
+                colorTheme: colorTheme,
+                iconName: iconName
             )
         }
 
@@ -82,9 +103,26 @@ class HabitWidgetManager {
             id: habits[index].id,
             name: habits[index].name,
             completedDates: dates,
-            colorTheme: habits[index].colorTheme
+            colorTheme: habits[index].colorTheme,
+            iconName: habits[index].iconName
         )
 
+        if let encoded = try? JSONEncoder().encode(habits) {
+            sharedDefaults.set(encoded, forKey: habitsKey)
+            reloadWidgets()
+        }
+    }
+
+    func updateHabitAppearance(id: UUID, colorHex: String, iconName: String) {
+        var habits = getHabitsFromUserDefaults()
+        guard let index = habits.firstIndex(where: { $0.id == id }) else { return }
+        habits[index] = HabitWidgetData(
+            id: habits[index].id,
+            name: habits[index].name,
+            completedDates: habits[index].completedDates,
+            colorTheme: colorHex,
+            iconName: iconName
+        )
         if let encoded = try? JSONEncoder().encode(habits) {
             sharedDefaults.set(encoded, forKey: habitsKey)
             reloadWidgets()

@@ -15,25 +15,21 @@ struct HabitProvider: AppIntentTimelineProvider {
             date: Date(),
             habit: HabitWidgetData(
                 id: UUID(), name: "Meditation", completedDates: dummyDates,
-                colorTheme: "#A154F2"),
-            colorHex: "#A154F2",
-            iconName: "flame.fill"
+                colorTheme: "#A154F2", iconName: "flame.fill")
         )
     }
 
     func snapshot(for configuration: SelectHabitIntent, in context: Context) async -> HabitEntry {
         let habits = HabitWidgetManager.shared.getHabitsFromUserDefaults()
-        let colorHex = configuration.color.rawValue
-        let iconName = configuration.icon.rawValue
 
         if let selectedId = configuration.habit?.id,
             let selectedHabit = habits.first(where: { $0.id.uuidString == selectedId })
         {
-            return HabitEntry(date: Date(), habit: selectedHabit, colorHex: colorHex, iconName: iconName)
+            return HabitEntry(date: Date(), habit: selectedHabit)
         }
 
         if let first = habits.first {
-            return HabitEntry(date: Date(), habit: first, colorHex: colorHex, iconName: iconName)
+            return HabitEntry(date: Date(), habit: first)
         }
 
         return placeholder(in: context)
@@ -43,15 +39,13 @@ struct HabitProvider: AppIntentTimelineProvider {
         HabitEntry
     > {
         let habits = HabitWidgetManager.shared.getHabitsFromUserDefaults()
-        let colorHex = configuration.color.rawValue
-        let iconName = configuration.icon.rawValue
 
         var currentHabit: HabitWidgetData? = nil
         if let selectedId = configuration.habit?.id {
             currentHabit = habits.first(where: { $0.id.uuidString == selectedId })
         }
 
-        let entry = HabitEntry(date: Date(), habit: currentHabit, colorHex: colorHex, iconName: iconName)
+        let entry = HabitEntry(date: Date(), habit: currentHabit)
         return Timeline(entries: [entry], policy: .never)
     }
 
@@ -74,8 +68,6 @@ struct HabitProvider: AppIntentTimelineProvider {
 struct HabitEntry: TimelineEntry {
     let date: Date
     let habit: HabitWidgetData?
-    let colorHex: String
-    let iconName: String
 }
 
 @available(iOS 17.0, *)
@@ -119,7 +111,7 @@ struct HabitWidgetContentView: View {
 
     var body: some View {
         if let habit = entry.habit {
-            HabitSingleView(habit: habit, family: family, colorHex: entry.colorHex, iconName: entry.iconName)
+            HabitSingleView(habit: habit, family: family)
                 .padding(widgetMargin)
         } else {
             VStack {
@@ -134,11 +126,9 @@ struct HabitWidgetContentView: View {
 struct HabitSingleView: View {
     let habit: HabitWidgetData
     let family: WidgetFamily
-    let colorHex: String
-    let iconName: String
 
     var themeColor: Color {
-        Color(hex: colorHex) ?? .green
+        Color(hex: habit.colorTheme) ?? .green
     }
 
     var isCompletedToday: Bool {
@@ -159,7 +149,7 @@ struct HabitSingleView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(themeColor.opacity(0.15))
                         .frame(width: 32, height: 32)
-                    Image(systemName: iconName)
+                    Image(systemName: habit.iconName)
                         .font(.system(size: 16))
                         .foregroundColor(themeColor)
                 }

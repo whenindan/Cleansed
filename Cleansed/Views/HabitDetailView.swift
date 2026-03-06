@@ -7,9 +7,35 @@ struct HabitDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var auth: AuthManager
     @State private var selectedMonth: Date = Date()
+    @State private var editedColorHex: String = "#A154F2"
+    @State private var editedIconName: String = "flame.fill"
 
     // TEST MODE: Set to true to enable calendar editing for testing
     private let enableCalendarEditing = true
+
+    private let colors: [(String, String)] = [
+        ("#A154F2", "Purple"),
+        ("#5C99F2", "Blue"),
+        ("#35F28A", "Green"),
+        ("#F2C035", "Yellow"),
+        ("#F26D85", "Red"),
+        ("#5E5CE6", "Indigo"),
+        ("#FFB347", "Orange"),
+        ("#14B8A6", "Teal"),
+        ("#EC4899", "Pink"),
+        ("#F59E0B", "Amber"),
+    ]
+
+    private let icons = [
+        "flame.fill", "moon.fill", "sun.max.fill", "book.fill",
+        "heart.fill", "bolt.fill", "leaf.fill", "star.fill",
+        "figure.walk", "music.note", "paintbrush.fill", "drop.fill",
+        "pencil", "dumbbell.fill", "brain.head.profile", "bed.double.fill",
+    ]
+
+    private var accentColor: Color {
+        Color(hex: editedColorHex) ?? .purple
+    }
 
     var body: some View {
         ScrollView {
@@ -69,6 +95,9 @@ struct HabitDetailView: View {
                     }
                 }
                 .padding(.horizontal)
+
+                // Widget Appearance
+                widgetAppearanceSection
 
                 // Calendar Grid
                 VStack(alignment: .leading, spacing: 20) {
@@ -130,6 +159,103 @@ struct HabitDetailView: View {
         }
         .navigationTitle(habit.name)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            editedColorHex = habit.colorHex.isEmpty ? "#A154F2" : habit.colorHex
+            editedIconName = habit.iconName.isEmpty ? "flame.fill" : habit.iconName
+        }
+    }
+
+    // MARK: - Widget Appearance Section
+
+    private var widgetAppearanceSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header with live preview
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(accentColor.opacity(0.15))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: editedIconName)
+                        .font(.system(size: 20))
+                        .foregroundColor(accentColor)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Widget Appearance")
+                        .font(.headline)
+                    Text("Customize the icon and color on your widget")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+
+            // Icon Picker
+            Text("Icon")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 10) {
+                ForEach(icons, id: \.self) { icon in
+                    let isSelected = editedIconName == icon
+                    Button {
+                        editedIconName = icon
+                        saveAppearance()
+                    } label: {
+                        Image(systemName: icon)
+                            .font(.title3)
+                            .frame(width: 36, height: 36)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(isSelected ? accentColor.opacity(0.2) : Color(.secondarySystemBackground))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(isSelected ? accentColor : .clear, lineWidth: 2)
+                            )
+                            .foregroundColor(isSelected ? accentColor : .secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            // Color Picker
+            Text("Color")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 10) {
+                ForEach(colors, id: \.0) { hex, _ in
+                    let chipColor = Color(hex: hex) ?? .gray
+                    let isSelected = editedColorHex == hex
+                    Button {
+                        editedColorHex = hex
+                        saveAppearance()
+                    } label: {
+                        Circle()
+                            .fill(chipColor)
+                            .frame(width: 36, height: 36)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.primary, lineWidth: isSelected ? 3 : 0)
+                            )
+                            .overlay(
+                                Image(systemName: "checkmark")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.white)
+                                    .opacity(isSelected ? 1 : 0)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    private func saveAppearance() {
+        habit.colorHex = editedColorHex
+        habit.iconName = editedIconName
+        try? modelContext.save()
+        HabitWidgetManager.shared.updateHabitAppearance(
+            id: habit.id, colorHex: editedColorHex, iconName: editedIconName)
     }
 
     // MARK: - Calendar Logic
