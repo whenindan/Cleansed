@@ -9,6 +9,9 @@ struct HabitDetailView: View {
     @State private var selectedMonth: Date = Date()
     @State private var editedColorHex: String = "#A154F2"
     @State private var editedIconName: String = "flame.fill"
+    @State private var isCustomizingAppearance: Bool = false
+    @State private var iconSearchText: String = ""
+    @State private var selectedColor: Color = .purple
 
     // TEST MODE: Set to true to enable calendar editing for testing
     private let enableCalendarEditing = true
@@ -31,7 +34,32 @@ struct HabitDetailView: View {
         "heart.fill", "bolt.fill", "leaf.fill", "star.fill",
         "figure.walk", "music.note", "paintbrush.fill", "drop.fill",
         "pencil", "dumbbell.fill", "brain.head.profile", "bed.double.fill",
+        "airplane", "car.fill", "bicycle", "tram.fill",
+        "cart.fill", "bag.fill", "creditcard.fill", "banknote.fill",
+        "cross.case.fill", "pills.fill", "stethoscope", "syringe.fill",
+        "cup.and.saucer.fill", "wineglass.fill", "fork.knife", "takeoutbag.and.cup.and.straw.fill",
+        "gamecontroller.fill", "tv.fill", "headphones", "pianokeys",
+        "pawprint.fill", "tortoise.fill", "ladybug.fill", "ant.fill",
+        "house.fill", "building.2.fill", "tent.fill", "tree.fill",
+        "graduationcap.fill", "briefcase.fill", "display", "laptopcomputer",
+        "hammer.fill", "wrench.and.screwdriver.fill", "gearshape.fill", "scissors",
+        "magnifyingglass", "lightbulb.fill", "camera.fill", "video.fill",
+        "mic.fill", "message.fill", "phone.fill", "envelope.fill",
+        "mappin.and.ellipse", "map.fill", "clock.fill", "alarm.fill",
+        "timer", "stopwatch.fill", "calendar", "list.bullet",
+        "checklist", "rosette", "trophy.fill", "medal.fill",
+        "gift.fill", "balloon.2.fill", "party.popper.fill", "sparkles",
+        "smiley.fill", "hand.thumbsup.fill", "figure.run", "figure.yoga",
+        "water.waves", "flame", "drop", "cloud.rain.fill",
     ]
+
+    private var filteredIcons: [String] {
+        if iconSearchText.isEmpty {
+            return icons
+        } else {
+            return icons.filter { $0.localizedCaseInsensitiveContains(iconSearchText) }
+        }
+    }
 
     private var accentColor: Color {
         Color(hex: editedColorHex) ?? .purple
@@ -162,6 +190,11 @@ struct HabitDetailView: View {
         .onAppear {
             editedColorHex = habit.colorHex.isEmpty ? "#A154F2" : habit.colorHex
             editedIconName = habit.iconName.isEmpty ? "flame.fill" : habit.iconName
+            selectedColor = Color(hex: editedColorHex) ?? .purple
+        }
+        .onChange(of: selectedColor) { _, newValue in
+            editedColorHex = newValue.toHex()
+            saveAppearance()
         }
     }
 
@@ -187,63 +220,87 @@ struct HabitDetailView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-            }
 
-            // Icon Picker
-            Text("Icon")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 10) {
-                ForEach(icons, id: \.self) { icon in
-                    let isSelected = editedIconName == icon
-                    Button {
-                        editedIconName = icon
-                        saveAppearance()
-                    } label: {
-                        Image(systemName: icon)
-                            .font(.title3)
-                            .frame(width: 36, height: 36)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(isSelected ? accentColor.opacity(0.2) : Color(.secondarySystemBackground))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(isSelected ? accentColor : .clear, lineWidth: 2)
-                            )
-                            .foregroundColor(isSelected ? accentColor : .secondary)
+                Button {
+                    withAnimation {
+                        isCustomizingAppearance.toggle()
                     }
-                    .buttonStyle(.plain)
+                } label: {
+                    Text(isCustomizingAppearance ? "Done" : "Customize")
+                        .font(.subheadline.bold())
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(accentColor)
+                        .cornerRadius(12)
                 }
             }
 
-            // Color Picker
-            Text("Color")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 10) {
-                ForEach(colors, id: \.0) { hex, _ in
-                    let chipColor = Color(hex: hex) ?? .gray
-                    let isSelected = editedColorHex == hex
-                    Button {
-                        editedColorHex = hex
-                        saveAppearance()
-                    } label: {
-                        Circle()
-                            .fill(chipColor)
-                            .frame(width: 36, height: 36)
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.primary, lineWidth: isSelected ? 3 : 0)
-                            )
-                            .overlay(
-                                Image(systemName: "checkmark")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.white)
-                                    .opacity(isSelected ? 1 : 0)
-                            )
+            if isCustomizingAppearance {
+                // Color Picker
+                ColorPicker("Color", selection: $selectedColor, supportsOpacity: false)
+                    .font(.subheadline)
+                    .padding(.vertical, 8)
+
+                // Icon Picker
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Icon")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+
+                    // Search Bar
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.secondary)
+                        TextField("Search icons...", text: $iconSearchText)
+                            .disableAutocorrection(true)
+
+                        if !iconSearchText.isEmpty {
+                            Button {
+                                iconSearchText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
-                    .buttonStyle(.plain)
+                    .padding(8)
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(10)
+
+                    ScrollView {
+                        LazyVGrid(
+                            columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 12
+                        ) {
+                            ForEach(filteredIcons, id: \.self) { icon in
+                                let isSelected = editedIconName == icon
+                                Button {
+                                    editedIconName = icon
+                                    saveAppearance()
+                                } label: {
+                                    Image(systemName: icon)
+                                        .font(.title3)
+                                        .frame(width: 40, height: 40)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(
+                                                    isSelected
+                                                        ? accentColor.opacity(0.2)
+                                                        : Color(.secondarySystemBackground))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(
+                                                    isSelected ? accentColor : .clear, lineWidth: 2)
+                                        )
+                                        .foregroundColor(isSelected ? accentColor : .primary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .frame(maxHeight: 200)  // Scrollable constrained area
                 }
             }
         }
