@@ -2,54 +2,78 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Build & Test
+## Project Overview
 
-Open `Cleansed.xcodeproj` in Xcode and run the `Cleansed` scheme on a simulator or device. All targets require signing with an Apple Developer account that has App Groups, FamilyControls, and DeviceActivity entitlements.
+**Cleansed** is an iOS app (SwiftUI + SwiftData) that combines a todo list, habit tracker, and screen time/app blocker (using Apple's Screen Time API). It supports Supabase cloud sync and exposes home screen widgets.
 
-Run tests from command line:
+## Build & Run
+
+This is an Xcode project. There is no `xcodeproj` file visible at the repo root — open it directly in Xcode. All builds, tests, and runs are done via Xcode or `xcodebuild`.
+
 ```bash
-xcodebuild test \
-  -project Cleansed.xcodeproj \
-  -scheme Cleansed \
-  -destination 'platform=iOS Simulator,name=iPhone 15'
+# Build from command line (simulator)
+xcodebuild -scheme Cleansed -destination 'platform=iOS Simulator,name=iPhone 16' build
+
+# Run tests
+xcodebuild test -scheme Cleansed -destination 'platform=iOS Simulator,name=iPhone 16'
+
+# Run a single test class
+xcodebuild test -scheme Cleansed -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:CleansedTests/CleansedTests
 ```
 
 ## Architecture
 
-**Tech stack:** Swift/SwiftUI + SwiftData (local) + Supabase (cloud sync) + WidgetKit + FamilyControls
+### App Targets
 
-### Targets
-- `Cleansed/` — Main app
-- `TodoWidget/` — Home Screen widget with interactive todo toggles
-- `DeviceActivityMonitorExtension/` — Focus session lifecycle
-- `DeviceActivityReportExtension/` — Screen time report scene
-- `ShieldActionExtension/` / `ShieldConfigurationExtension/` — App blocking UI
+| Target | Purpose |
+|--------|---------|
+| `Cleansed` | Main app |
+| `TodoWidget` | Home screen todo widget (small/medium/large) |
+| `HabitWidget` | Home screen habit contribution grid widget |
+| `DeviceActivityMonitorExtension` | Fires when a Screen Time schedule starts/ends |
+| `DeviceActivityReportExtension` | Renders screen time usage reports |
+| `ShieldActionExtension` | Handles taps on shielded/blocked apps |
+| `ShieldConfigurationExtension` | Customizes the shield UI for blocked apps |
 
-### Data Layer
+### App Group
 
-Two parallel storage systems:
-1. **SwiftData** — local source of truth for the main app (`TodoItem`, `Habit`, `HabitCompletion`, `FocusGroup`). Container is the app's own container, **not** App Group (App Group causes Error 512 on first launch).
-2. **Supabase** — cloud backend. All API calls go through `SupabaseManager` (singleton). Tables: `profiles`, `habits`, `habit_completions`, `todo_items`.
+All targets share **`group.com.cleansed.shared`** via `UserDefaults` for cross-process data. The main app's SwiftData store is intentionally **not** in the App Group (avoids Error 512); widgets read data via `UserDefaults` instead.
 
-`DataSyncManager` coordinates between the two: loads from Supabase into SwiftData on sign-in, migrates guest data on account creation, and clears local data on sign-out.
+### Data Flow
 
-**Widget bridge:** `TodoManager` serializes SwiftData todos to `UserDefaults(suiteName: "group.com.cleansed.shared")` as JSON, then calls `WidgetCenter.shared.reloadTimelines`. The widget reads from this UserDefaults key; it never touches SwiftData directly. `ToggleTodoIntent` also writes back to UserDefaults when the user taps a todo from the widget.
+1. **Local persistence**: SwiftData (`ModelContainer`) stores `TodoItem`, `Habit`, `HabitCompletion`, `FocusGroup`.
+2. **Cloud sync**: `SupabaseManager` handles Supabase CRUD. `DataSyncManager` coordinates loading from Supabase into SwiftData on sign-in and migrating guest data on upgrade.
+3. **Widget data**: `TodoManager.shared` and `HabitWidgetManager.shared` serialize data to `UserDefaults(suiteName: "group.com.cleansed.shared")` so widgets can read it without SwiftData access.
+4. **Screen Time**: `ScreenTimeManager` (uses `@Observable`) manages `FamilyControls` authorization, `ManagedSettings` app shielding, and `DeviceActivity` schedules. Shared state for extensions lives in `ScreenTimeShared` (App Group UserDefaults).
 
-### Auth Flow
+### Key Managers
 
-`AuthManager` (ObservableObject, injected as `@EnvironmentObject`) tracks `isAuthenticated` and `isGuest`. The app root in `CleansedApp` shows `SignInView` or `MainTabView` based on these states. Guest mode allows full local use; converting to an account triggers `DataSyncManager.migrateGuestData`.
+- `AuthManager` — Supabase auth, guest mode, deep link handling (`ObservableObject`, injected as `@EnvironmentObject`)
+- `DataSyncManager` — Supabase ↔ SwiftData sync (`@MainActor`, singleton)
+- `ScreenTimeManager` — Screen Time + app blocking (`@Observable`, created per-view)
+- `TodoManager` — SwiftData → UserDefaults sync for todo widget (singleton)
+- `HabitWidgetManager` — SwiftData → UserDefaults sync for habit widget (singleton)
+- `SupabaseManager` — Raw Supabase API calls (singleton)
 
-### Design System
+### Navigation
 
-`DesignSystem.swift` defines shared UI primitives:
-- `MinimalistCheckboxStyle` — `ToggleStyle` used for todo/habit rows
-- `FAB` — floating action button (plus icon, primary color)
-- `HideListSeparators` — view modifier for plain list style without separators
+`MainTabView` has 4 tabs: **Todos** (0), **Habits** (1), **Focus** (2), **Account** (3). Deep link `cleansed://todos` switches to tab 0; `cleansed://habits` is handled by the habit widget.
 
-## Critical Patterns
+### Design System (`DesignSystem.swift`)
 
-**SwiftData deletion order:** Always delete `HabitCompletion` records before `Habit` records. The relationship is mandatory, so deleting a `Habit` first causes a constraint violation. Never use `context.delete(model:)` batch delete — always fetch and delete individually.
+- `MinimalistCheckboxStyle` — Toggle style used for todo rows
+- `FAB` — Floating action button (black/white, respects dark mode)
+- `.hideListSeparators()` — View modifier for plain list appearance
+- `Color(hex:)` / `toHex()` — Hex color utilities (defined in `WidgetSettings.swift`; duplicated in `HabitWidget.swift` for the widget target)
 
-**Supabase client:** Defined as a module-level global `supabase` in `SupabaseClient.swift`. All targets that need Supabase import this file.
+### Widget Customization
 
-**Widget sort order:** Incomplete todos first (sorted by `sortDate` ascending), completed todos last (sorted by `completedAt` descending). This logic lives in `TodoManager.sorted(_:)`.
+`WidgetSettings.shared` stores per-size (small/medium/large) settings in the shared App Group `UserDefaults` using `@AppStorage`. Settings include font size, alignment, padding, spacing, and optional custom background color. The shared `TodoWidgetContentView` and `TodoRowView` structs (in `WidgetSettings.swift`) are used by both widget sizes.
+
+### SwiftData Deletion Order
+
+**Critical**: Always delete `HabitCompletion` before `Habit` — batch deletion (`context.delete(model:)`) bypasses cascade rules and causes constraint violations. Use fetch-and-delete individually. See `DataSyncManager.clearLocalData`.
+
+### Screen Time Extensions
+
+Extensions communicate with the main app via the App Group `UserDefaults`. `ScreenTimeShared` provides the shared keys and encode/decode helpers for `FamilyActivitySelection`. The `DeviceActivityMonitorExtension` fires on schedule boundaries to enable/disable blocking.
