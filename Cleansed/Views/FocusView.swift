@@ -18,7 +18,7 @@ struct FocusView: View {
     @State private var showCreateSheet = false
     @State private var currentTime = Date()
 
-    let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
     var body: some View {
         NavigationStack {
@@ -65,7 +65,9 @@ struct FocusView: View {
                                     ForEach(focusGroups) { group in
                                         ZStack {
                                             FocusGroupRow(
-                                                group: group, screenTimeManager: screenTimeManager
+                                                group: group,
+                                                screenTimeManager: screenTimeManager,
+                                                currentTime: currentTime
                                             )
                                             .contentShape(Rectangle())
 
@@ -235,6 +237,7 @@ struct FocusView: View {
 struct FocusGroupRow: View {
     @Bindable var group: FocusGroup
     let screenTimeManager: ScreenTimeManager
+    let currentTime: Date
 
     var body: some View {
         HStack(spacing: 14) {
@@ -254,7 +257,7 @@ struct FocusGroupRow: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Color.primary)
 
-                Text(group.scheduleDescription)
+                Text(group.scheduleDescription(at: currentTime))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

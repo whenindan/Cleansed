@@ -122,6 +122,10 @@ final class FocusGroup {
     }
 
     var scheduleDescription: String {
+        scheduleDescription(at: Date())
+    }
+
+    func scheduleDescription(at date: Date) -> String {
         switch scheduleType {
         case .manual:
             return isEnabled ? "Active" : "Tap to activate"
@@ -132,10 +136,15 @@ final class FocusGroup {
             return "\(start) – \(end), \(days)"
         case .timer:
             if let endDate = timerEndDate, isEnabled {
-                let remaining = endDate.timeIntervalSinceNow
+                let remaining = endDate.timeIntervalSince(date)
                 if remaining > 0 {
-                    let mins = Int(remaining / 60)
-                    return "\(mins) min remaining"
+                    let totalMins = Int(remaining / 60)
+                    let hours = totalMins / 60
+                    let mins = totalMins % 60
+                    if hours > 0 {
+                        return "\(hours)h \(mins)m remaining"
+                    }
+                    return "\(totalMins)m remaining"
                 } else {
                     return "Timer expired"
                 }
