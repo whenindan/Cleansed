@@ -153,10 +153,10 @@ struct FocusView: View {
             } label: {
                 Text("Grant Access")
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color(.systemBackground))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.accentColor)
+                    .background(Color.primary)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .padding(.top, 4)
@@ -275,6 +275,7 @@ struct FocusGroupRow: View {
                 )
             )
             .labelsHidden()
+            .tint(.green)
         }
         .padding(14)
     }

@@ -11,7 +11,7 @@ import SwiftUI
 
 @main
 struct CleansedApp: App {
-    @AppStorage("isDarkMode") private var isDarkMode = false
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @StateObject private var authManager = AuthManager()
 
     // Explicitly configure SwiftData to use the app's own container,
@@ -44,7 +44,8 @@ struct CleansedApp: App {
                 }
             }
             .environmentObject(authManager)
-            .preferredColorScheme(isDarkMode ? .dark : .light)
+            .preferredColorScheme(appTheme.colorScheme)
+            .animation(.easeInOut(duration: 0.35), value: appTheme)
             .onOpenURL { url in
                 Task { await authManager.handleDeepLink(url) }
             }

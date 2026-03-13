@@ -103,6 +103,7 @@ struct FocusGroupDetailView: View {
                         screenTimeManager.toggleGroup(group, enabled: newValue)
                     }
                 ))
+            .tint(.green)
         }
     }
 

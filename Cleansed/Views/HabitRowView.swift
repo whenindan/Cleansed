@@ -140,20 +140,18 @@ struct DayCircleView: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(isCompleted ? Color.primary : Color.clear)
-                        .frame(width: 44, height: 44)  // Bigger circles as per design
+            ZStack {
+                Circle()
+                    .fill(isCompleted ? Color.primary : Color.clear)
+                    .frame(width: 44, height: 44)
 
-                    Text(dayLabel)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(isCompleted ? Color(.systemBackground) : Color.primary)
-                }
+                Text(dayLabel)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(isCompleted ? Color(.systemBackground) : Color.primary)
             }
         }
         .buttonStyle(.borderless)
-        .disabled(state == .future)  // Prevent tapping future dates?
+        .disabled(state == .future)
     }
 }
 
