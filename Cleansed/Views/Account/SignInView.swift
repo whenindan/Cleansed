@@ -93,24 +93,6 @@ struct SignInView: View {
             .font(.subheadline)
             .foregroundColor(.secondary)
 
-            // Divider
-            HStack {
-                Rectangle().frame(height: 1).foregroundColor(Color.gray.opacity(0.3))
-                Text("Or Login with")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .layoutPriority(1)
-                Rectangle().frame(height: 1).foregroundColor(Color.gray.opacity(0.3))
-            }
-            .padding(.top, 10)
-
-            // Social buttons
-            HStack(spacing: 16) {
-                socialButton(iconName: "f.square.fill", color: .blue)
-                socialButton(iconName: "g.circle.fill", color: .red)
-                socialButton(iconName: "apple.logo", color: .primary)
-            }
-
             // Guest mode
             Button("Continue as Guest") {
                 auth.continueAsGuest()
@@ -162,18 +144,6 @@ struct SignInView: View {
         isLoading = false
     }
 
-    @ViewBuilder
-    private func socialButton(iconName: String, color: Color) -> some View {
-        Button(action: {}) {
-            Image(systemName: iconName)
-                .font(.title)
-                .foregroundColor(color)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(12)
-        }
-    }
 }
 
 #Preview {
