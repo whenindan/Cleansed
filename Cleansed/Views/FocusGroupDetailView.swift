@@ -23,6 +23,7 @@ struct FocusGroupDetailView: View {
     @State private var editedEndDate = Date()
     @State private var editedWeekdays: Set<Int> = []
     @State private var editedTimerDuration: Int = 30
+    @State private var customTimerDuration: TimeInterval = 45 * 60
 
     private let icons = [
         "moon.fill", "sun.max.fill", "briefcase.fill", "book.fill",
@@ -304,62 +305,12 @@ struct FocusGroupDetailView: View {
     // MARK: - Timer Picker
 
     private var timerPicker: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Block for")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible()), count: 2),
-                spacing: 10
-            ) {
-                ForEach(TimerDuration.allCases) { duration in
-                    let selected = isTimerSelected(duration)
-                    Button {
-                        if duration == .custom {
-                            editedTimerDuration = 45
-                        } else {
-                            editedTimerDuration = duration.rawValue
-                        }
-                        group.timerDuration = editedTimerDuration
-                    } label: {
-                        Text(duration.label)
-                            .font(.subheadline.weight(.medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(selected ? accentColor : Color(.tertiarySystemFill))
-                            )
-                            .foregroundStyle(selected ? .white : Color.primary)
-                    }
-                    .buttonStyle(.plain)
-                }
+        CountDownTimerPicker(duration: $customTimerDuration)
+            .frame(height: 160)
+            .onChange(of: customTimerDuration) { _, seconds in
+                editedTimerDuration = max(1, Int(seconds / 60))
+                group.timerDuration = editedTimerDuration
             }
-
-            if isCustomTimer {
-                Stepper(
-                    "Custom: \(editedTimerDuration) min",
-                    value: $editedTimerDuration,
-                    in: 5...480,
-                    step: 5
-                )
-                .onChange(of: editedTimerDuration) { _, newVal in
-                    group.timerDuration = newVal
-                }
-            }
-        }
-    }
-
-    private func isTimerSelected(_ duration: TimerDuration) -> Bool {
-        if duration == .custom {
-            return isCustomTimer
-        }
-        return editedTimerDuration == duration.rawValue && !isCustomTimer
-    }
-
-    private var isCustomTimer: Bool {
-        ![30, 60, 120, 240].contains(editedTimerDuration)
     }
 
     // MARK: - Load State
@@ -371,6 +322,7 @@ struct FocusGroupDetailView: View {
         editedScheduleType = group.scheduleType
         editedWeekdays = Set(group.weekdays)
         editedTimerDuration = group.timerDuration
+        customTimerDuration = TimeInterval(group.timerDuration * 60)
 
         editedStartDate =
             Calendar.current.date(

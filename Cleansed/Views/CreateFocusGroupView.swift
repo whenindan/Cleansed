@@ -26,7 +26,7 @@ struct CreateFocusGroupView: View {
     @State private var endMinute = 0
     @State private var selectedWeekdays: Set<Int> = Set(1...7)
     @State private var timerDuration = 30
-    @State private var customTimerMinutes = 30
+    @State private var customTimerDuration: TimeInterval = 45 * 60
 
     // App selection
     @State private var activitySelection = FamilyActivitySelection()
@@ -302,61 +302,11 @@ struct CreateFocusGroupView: View {
     // MARK: - Timer Picker
 
     private var timerPicker: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Block for")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible()), count: 2),
-                spacing: 10
-            ) {
-                ForEach(TimerDuration.allCases) { duration in
-                    let selected = isTimerSelected(duration)
-                    Button {
-                        if duration == .custom {
-                            timerDuration = customTimerMinutes
-                        } else {
-                            timerDuration = duration.rawValue
-                        }
-                    } label: {
-                        Text(duration.label)
-                            .font(.subheadline.weight(.medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(selected ? accentColor : Color(.tertiarySystemFill))
-                            )
-                            .foregroundStyle(selected ? .white : Color.primary)
-                    }
-                    .buttonStyle(.plain)
-                }
+        CountDownTimerPicker(duration: $customTimerDuration)
+            .frame(height: 160)
+            .onChange(of: customTimerDuration) { _, seconds in
+                timerDuration = max(1, Int(seconds / 60))
             }
-
-            if isCustomTimer {
-                Stepper(
-                    "Custom: \(customTimerMinutes) min",
-                    value: $customTimerMinutes,
-                    in: 5...480,
-                    step: 5
-                )
-                .onChange(of: customTimerMinutes) { _, newVal in
-                    timerDuration = newVal
-                }
-            }
-        }
-    }
-
-    private func isTimerSelected(_ duration: TimerDuration) -> Bool {
-        if duration == .custom {
-            return isCustomTimer
-        }
-        return timerDuration == duration.rawValue && !isCustomTimer
-    }
-
-    private var isCustomTimer: Bool {
-        ![30, 60, 120, 240].contains(timerDuration)
     }
 
     // MARK: - Save
