@@ -17,6 +17,7 @@ struct FocusGroupDetailView: View {
     @State private var showAppPicker = false
     @State private var editedName: String = ""
     @State private var editedIcon: String = ""
+    @State private var iconSearchText: String = ""
     @State private var editedColorHex: String = ""
     @State private var editedScheduleType: ScheduleType = .manual
     @State private var editedStartDate = Date()
@@ -26,12 +27,36 @@ struct FocusGroupDetailView: View {
     @State private var customTimerDuration: TimeInterval = 45 * 60
 
     private let icons = [
-        "moon.fill", "sun.max.fill", "briefcase.fill", "book.fill",
-        "laptopcomputer", "gamecontroller.fill", "bed.double.fill",
-        "figure.walk", "heart.fill", "graduationcap.fill",
-        "paintbrush.fill", "music.note", "leaf.fill", "flame.fill",
-        "bolt.fill", "eye.slash.fill",
+        "flame.fill", "moon.fill", "sun.max.fill", "book.fill",
+        "heart.fill", "bolt.fill", "leaf.fill", "star.fill",
+        "figure.walk", "music.note", "paintbrush.fill", "drop.fill",
+        "pencil", "dumbbell.fill", "brain.head.profile", "bed.double.fill",
+        "airplane", "car.fill", "bicycle", "tram.fill",
+        "cart.fill", "bag.fill", "creditcard.fill", "banknote.fill",
+        "cross.case.fill", "pills.fill", "stethoscope", "syringe.fill",
+        "cup.and.saucer.fill", "wineglass.fill", "fork.knife", "takeoutbag.and.cup.and.straw.fill",
+        "gamecontroller.fill", "tv.fill", "headphones", "pianokeys",
+        "pawprint.fill", "tortoise.fill", "ladybug.fill", "ant.fill",
+        "house.fill", "building.2.fill", "tent.fill", "tree.fill",
+        "graduationcap.fill", "briefcase.fill", "display", "laptopcomputer",
+        "hammer.fill", "wrench.and.screwdriver.fill", "gearshape.fill", "scissors",
+        "magnifyingglass", "lightbulb.fill", "camera.fill", "video.fill",
+        "mic.fill", "message.fill", "phone.fill", "envelope.fill",
+        "mappin.and.ellipse", "map.fill", "clock.fill", "alarm.fill",
+        "timer", "stopwatch.fill", "calendar", "list.bullet",
+        "checklist", "rosette", "trophy.fill", "medal.fill",
+        "gift.fill", "balloon.2.fill", "party.popper.fill", "sparkles",
+        "smiley.fill", "hand.thumbsup.fill", "figure.run", "figure.yoga",
+        "water.waves", "flame", "drop", "cloud.rain.fill",
     ]
+
+    private var filteredIcons: [String] {
+        if iconSearchText.isEmpty {
+            return icons
+        } else {
+            return icons.filter { $0.localizedCaseInsensitiveContains(iconSearchText) }
+        }
+    }
 
     private let colors: [(String, String)] = [
         ("#5E5CE6", "Indigo"),
@@ -119,35 +144,59 @@ struct FocusGroupDetailView: View {
     }
 
     private var iconPickerView: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Icon")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible()), count: 8),
-                spacing: 10
-            ) {
-                ForEach(icons, id: \.self) { icon in
-                    let isSelected = editedIcon == icon
+                
+            // Search Bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField("Search icons...", text: $iconSearchText)
+                    .disableAutocorrection(true)
+
+                if !iconSearchText.isEmpty {
                     Button {
-                        editedIcon = icon
-                        group.icon = icon
+                        iconSearchText = ""
                     } label: {
-                        Image(systemName: icon)
-                            .font(.title3)
-                            .frame(width: 36, height: 36)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(isSelected ? accentColor.opacity(0.2) : Color.clear)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(isSelected ? accentColor : .clear, lineWidth: 2)
-                            )
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
                     }
-                    .buttonStyle(.plain)
                 }
             }
+            .padding(8)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(10)
+
+            ScrollView {
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 10
+                ) {
+                    ForEach(filteredIcons, id: \.self) { icon in
+                        let isSelected = editedIcon == icon
+                        Button {
+                            editedIcon = icon
+                            group.icon = icon
+                        } label: {
+                            Image(systemName: icon)
+                                .font(.title3)
+                                .frame(width: 36, height: 36)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(isSelected ? accentColor.opacity(0.2) : Color.clear)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(isSelected ? accentColor : .clear, lineWidth: 2)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            .frame(maxHeight: 200) // Scrollable constrained area
         }
     }
 
