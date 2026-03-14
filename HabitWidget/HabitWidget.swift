@@ -165,13 +165,13 @@ struct HabitSingleView: View {
                 Button(intent: ToggleHabitIntent(habitId: habit.id.uuidString)) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(isCompletedToday ? themeColor : Color.white.opacity(0.1))
+                            .fill(isCompletedToday ? Color.clear : Color.white.opacity(0.1))
                             .frame(width: 32, height: 32)
 
                         if isCompletedToday {
                             Image(systemName: "checkmark")
-                                .font(.system(size: 15, weight: .bold))
-                                .foregroundColor(.white)
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(themeColor)
                         }
                     }
                 }
