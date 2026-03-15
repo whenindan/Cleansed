@@ -15,9 +15,9 @@ import UIKit
 class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     override func configuration(shielding application: Application) -> ShieldConfiguration {
         return ShieldConfiguration(
-            backgroundBlurStyle: .systemThickMaterialDark,
-            backgroundColor: UIColor.black.withAlphaComponent(0.85),
-            icon: UIImage(systemName: "hand.raised.fill"),
+            backgroundBlurStyle: .dark, // explicitly dark blur, to avoid default light grey
+            backgroundColor: .black, // solid black, 100% opacity
+            icon: UIImage(systemName: "hand.raised.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal),
             title: ShieldConfiguration.Label(
                 text: "You Are Blocked",
                 color: .white
@@ -26,13 +26,13 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
                 text: application.localizedDisplayName.map {
                     "\($0) is blocked during your focus session."
                 } ?? "This app is blocked during your focus session.",
-                color: UIColor.lightGray
+                color: .white
             ),
             primaryButtonLabel: ShieldConfiguration.Label(
                 text: "OK",
-                color: .white
+                color: .black
             ),
-            primaryButtonBackgroundColor: UIColor(red: 0.37, green: 0.36, blue: 0.90, alpha: 1.0)
+            primaryButtonBackgroundColor: .white
         )
     }
 
@@ -44,9 +44,9 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
 
     override func configuration(shielding webDomain: WebDomain) -> ShieldConfiguration {
         return ShieldConfiguration(
-            backgroundBlurStyle: .systemThickMaterialDark,
-            backgroundColor: UIColor.black.withAlphaComponent(0.85),
-            icon: UIImage(systemName: "hand.raised.fill"),
+            backgroundBlurStyle: .dark, // explicitly dark blur, to avoid default light grey
+            backgroundColor: .black, // solid black, 100% opacity
+            icon: UIImage(systemName: "hand.raised.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal),
             title: ShieldConfiguration.Label(
                 text: "You Are Blocked",
                 color: .white
@@ -55,13 +55,13 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
                 text: webDomain.domain.map {
                     "\($0) is blocked during your focus session."
                 } ?? "This website is blocked during your focus session.",
-                color: UIColor.lightGray
+                color: .white
             ),
             primaryButtonLabel: ShieldConfiguration.Label(
                 text: "OK",
-                color: .white
+                color: .black
             ),
-            primaryButtonBackgroundColor: UIColor(red: 0.37, green: 0.36, blue: 0.90, alpha: 1.0)
+            primaryButtonBackgroundColor: .white
         )
     }
 

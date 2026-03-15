@@ -136,6 +136,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FD2B89E22F6740130017E45F /* Exceptions for "ShieldActionExtension" folder in "Cleansed" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ShieldActionExtension.swift,
+			);
+			target = FDD2B1472F40A8DF008572F8 /* Cleansed */;
+		};
 		FD7AE1E92F4D6119004918C7 /* Exceptions for "ShieldConfigurationExtension" folder in "ShieldConfigurationExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -263,6 +270,7 @@
 		FD7AE1F02F4D6147004918C7 /* ShieldActionExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				FD2B89E22F6740130017E45F /* Exceptions for "ShieldActionExtension" folder in "Cleansed" target */,
 				FD7AE30D2F4D6632004918C7 /* Exceptions for "ShieldActionExtension" folder in "ShieldActionExtension" target */,
 			);
 			path = ShieldActionExtension;
