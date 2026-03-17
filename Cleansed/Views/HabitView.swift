@@ -16,7 +16,6 @@ struct HabitView: View {
 
     @State private var isAddSheetPresented = false
     @State private var newHabitName = ""
-    @State private var newHabitStartDate = Date()
     @State private var hasSynced = false
     @FocusState private var isFocused: Bool
 
@@ -85,13 +84,6 @@ struct HabitView: View {
                             TextField("Habit Name", text: $newHabitName)
                                 .focused($isFocused)
                                 .onSubmit { addHabit() }
-
-                            DatePicker(
-                                "Start Date",
-                                selection: $newHabitStartDate,
-                                in: ...Date(),
-                                displayedComponents: .date
-                            )
                         }
                     }
                     .navigationTitle("New Habit")
@@ -101,7 +93,6 @@ struct HabitView: View {
                             Button("Cancel") {
                                 isAddSheetPresented = false
                                 newHabitName = ""
-                                newHabitStartDate = Date()
                             }
                         }
                         ToolbarItem(placement: .confirmationAction) {
@@ -113,7 +104,7 @@ struct HabitView: View {
                     }
                     .onAppear { isFocused = true }
                 }
-                .presentationDetents([.height(240)])
+                .presentationDetents([.height(180)])
             }
         }
     }
@@ -124,7 +115,7 @@ struct HabitView: View {
         let trimmed = newHabitName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        let newHabit = Habit(name: trimmed, startDate: newHabitStartDate)
+        let newHabit = Habit(name: trimmed, startDate: Date())
         modelContext.insert(newHabit)
         try? modelContext.save()
 
@@ -138,7 +129,6 @@ struct HabitView: View {
         }
 
         newHabitName = ""
-        newHabitStartDate = Date()
         isAddSheetPresented = false
     }
 
