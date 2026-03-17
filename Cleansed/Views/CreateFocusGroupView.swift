@@ -20,6 +20,7 @@ struct CreateFocusGroupView: View {
     @State private var selectedIcon = "moon.fill"
     @State private var iconSearchText = ""
     @State private var selectedColorHex = "#5E5CE6"
+    @State private var isHardBlock = false
     @State private var scheduleType: ScheduleType = .manual
     @State private var startHour = 22
     @State private var startMinute = 0
@@ -297,6 +298,17 @@ struct CreateFocusGroupView: View {
             case .timer:
                 timerPicker
             }
+
+            if scheduleType != .manual {
+                Section {
+                    Toggle("Hard Block", isOn: $isHardBlock)
+                        .tint(.red)
+                } footer: {
+                    Text(
+                        "If enabled, this focus session cannot be turned off early or deleted while active. Use with caution."
+                    )
+                }
+            }
         }
     }
 
@@ -369,6 +381,7 @@ struct CreateFocusGroupView: View {
             icon: selectedIcon,
             colorHex: selectedColorHex,
             isEnabled: false,
+            isHardBlock: isHardBlock,
             scheduleType: scheduleType,
             startHour: startHour,
             startMinute: startMinute,

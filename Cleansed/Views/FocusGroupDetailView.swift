@@ -129,6 +129,7 @@ struct FocusGroupDetailView: View {
                     }
                 ))
             .tint(.green)
+            .disabled(group.isEnabled && group.isHardBlock)
         }
     }
 
@@ -273,6 +274,7 @@ struct FocusGroupDetailView: View {
                 }
             }
             .pickerStyle(.segmented)
+            .disabled(group.isEnabled && group.isHardBlock)
             .onChange(of: editedScheduleType) { _, newVal in
                 group.scheduleType = newVal
             }

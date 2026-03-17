@@ -87,6 +87,7 @@ struct FocusView: View {
                                         .listRowBackground(
                                             Color.clear
                                         )
+                                        .deleteDisabled(group.isEnabled && group.isHardBlock)
                                     }
                                     .onDelete(perform: deleteGroupsList)
                                 }
@@ -225,6 +226,7 @@ struct FocusView: View {
     private func deleteGroupsList(at offsets: IndexSet) {
         for index in offsets {
             let group = focusGroups[index]
+            if group.isEnabled && group.isHardBlock { continue }
             screenTimeManager.removeGroup(group)
             modelContext.delete(group)
         }
@@ -276,6 +278,7 @@ struct FocusGroupRow: View {
             )
             .labelsHidden()
             .tint(.green)
+            .disabled(group.isEnabled && group.isHardBlock)
         }
         .padding(14)
     }

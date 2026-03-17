@@ -60,6 +60,7 @@ final class FocusGroup {
     var icon: String
     var colorHex: String
     var isEnabled: Bool
+    var isHardBlock: Bool = false
 
     // Schedule configuration
     var scheduleTypeRaw: String
@@ -88,6 +89,7 @@ final class FocusGroup {
         icon: String = "moon.fill",
         colorHex: String = "#5E5CE6",
         isEnabled: Bool = false,
+        isHardBlock: Bool = false,
         scheduleType: ScheduleType = .manual,
         startHour: Int = 22,
         startMinute: Int = 0,
@@ -103,6 +105,7 @@ final class FocusGroup {
         self.icon = icon
         self.colorHex = colorHex
         self.isEnabled = isEnabled
+        self.isHardBlock = isHardBlock
         self.scheduleTypeRaw = scheduleType.rawValue
         self.startHour = startHour
         self.startMinute = startMinute
