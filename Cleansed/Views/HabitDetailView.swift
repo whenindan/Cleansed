@@ -408,6 +408,5 @@ struct CalendarDayCell: View {
             .frame(height: 40)
         }
         .buttonStyle(.plain)
-        .disabled(onTap == nil)
     }
 }
