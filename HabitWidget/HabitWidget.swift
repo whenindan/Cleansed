@@ -46,7 +46,8 @@ struct HabitProvider: AppIntentTimelineProvider {
         }
 
         let entry = HabitEntry(date: Date(), habit: currentHabit)
-        return Timeline(entries: [entry], policy: .never)
+        let nextMidnight = Calendar.current.startOfDay(for: Calendar.current.date(byAdding: .day, value: 1, to: Date())!)
+        return Timeline(entries: [entry], policy: .after(nextMidnight))
     }
 
     private func generateDummyDates() -> [Date] {
