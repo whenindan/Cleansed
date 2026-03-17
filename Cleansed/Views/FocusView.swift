@@ -87,7 +87,7 @@ struct FocusView: View {
                                         .listRowBackground(
                                             Color.clear
                                         )
-                                        .deleteDisabled(group.isEnabled && group.isHardBlock)
+                                        .deleteDisabled(group.isHardBlockActive)
                                     }
                                     .onDelete(perform: deleteGroupsList)
                                 }
@@ -119,9 +119,11 @@ struct FocusView: View {
             }
             .onAppear {
                 screenTimeManager.checkAuthorization()
+                checkExpiredTimerGroups()
             }
             .onReceive(timer) { _ in
                 currentTime = Date()
+                checkExpiredTimerGroups()
             }
             .sheet(isPresented: $showCreateSheet) {
                 CreateFocusGroupView(screenTimeManager: screenTimeManager)
@@ -223,10 +225,26 @@ struct FocusView: View {
 
     // MARK: - Actions
 
+    /// Reset any timer-based groups whose end date has already passed.
+    private func checkExpiredTimerGroups() {
+        var changed = false
+        for group in focusGroups {
+            guard group.isEnabled,
+                  group.scheduleType == .timer,
+                  let endDate = group.timerEndDate,
+                  endDate < Date()
+            else { continue }
+            group.isEnabled = false
+            group.timerEndDate = nil
+            changed = true
+        }
+        if changed { try? modelContext.save() }
+    }
+
     private func deleteGroupsList(at offsets: IndexSet) {
         for index in offsets {
             let group = focusGroups[index]
-            if group.isEnabled && group.isHardBlock { continue }
+            if group.isHardBlockActive { continue }
             screenTimeManager.removeGroup(group)
             modelContext.delete(group)
         }
@@ -278,7 +296,7 @@ struct FocusGroupRow: View {
             )
             .labelsHidden()
             .tint(.green)
-            .disabled(group.isEnabled && group.isHardBlock)
+            .disabled(group.isHardBlockActive)
         }
         .padding(14)
     }

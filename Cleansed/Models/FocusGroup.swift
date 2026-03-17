@@ -128,6 +128,37 @@ final class FocusGroup {
         scheduleDescription(at: Date())
     }
 
+    /// True only while the hard block should actually be enforced.
+    /// - Manual: always locked while enabled.
+    /// - Timer: locked until the timer end date passes.
+    /// - Scheduled: locked only during the configured time window.
+    var isHardBlockActive: Bool {
+        guard isHardBlock && isEnabled else { return false }
+        switch scheduleType {
+        case .manual:
+            return true
+        case .timer:
+            guard let endDate = timerEndDate else { return false }
+            return endDate > Date()
+        case .scheduled:
+            return isWithinScheduleWindow()
+        }
+    }
+
+    private func isWithinScheduleWindow(at date: Date = Date()) -> Bool {
+        let cal = Calendar.current
+        let comps = cal.dateComponents([.hour, .minute], from: date)
+        let nowMinutes = (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
+        let startMinutes = startHour * 60 + startMinute
+        let endMinutes = endHour * 60 + endMinute
+        if startMinutes <= endMinutes {
+            return nowMinutes >= startMinutes && nowMinutes < endMinutes
+        } else {
+            // Cross-midnight schedule (e.g. 22:00 – 07:00)
+            return nowMinutes >= startMinutes || nowMinutes < endMinutes
+        }
+    }
+
     func scheduleDescription(at date: Date) -> String {
         switch scheduleType {
         case .manual:
