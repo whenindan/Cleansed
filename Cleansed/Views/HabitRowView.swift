@@ -151,7 +151,7 @@ struct DayCircleView: View {
             }
         }
         .buttonStyle(.borderless)
-        .disabled(state == .future)
+        .disabled(state != .today)
     }
 }
 

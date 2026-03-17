@@ -13,9 +13,6 @@ struct HabitDetailView: View {
     @State private var iconSearchText: String = ""
     @State private var selectedColor: Color = .purple
 
-    // TEST MODE: Set to true to enable calendar editing for testing
-    private let enableCalendarEditing = true
-
     private let colors: [(String, String)] = [
         ("#A154F2", "Purple"),
         ("#5C99F2", "Blue"),
@@ -172,10 +169,7 @@ struct HabitDetailView: View {
                                     day: day.day,
                                     isCompleted: isDateCompleted(day.date),
                                     isToday: Calendar.current.isDateInToday(day.date),
-                                    onTap: enableCalendarEditing
-                                        ? {
-                                            toggleCompletion(for: day.date)
-                                        } : nil
+                                    onTap: nil
                                 )
                             }
                         }
@@ -331,42 +325,6 @@ struct HabitDetailView: View {
         if let newMonth = calendar.date(byAdding: .month, value: 1, to: selectedMonth) {
             selectedMonth = newMonth
         }
-    }
-
-    private func toggleCompletion(for date: Date) {
-        let calendar = Calendar.current
-        let targetDay = calendar.startOfDay(for: date)
-
-        // Check if already completed
-        if let existingCompletion = habit.completions.first(where: { completion in
-            calendar.startOfDay(for: completion.date) == targetDay
-        }) {
-            // Remove completion
-            modelContext.delete(existingCompletion)
-            if auth.isAuthenticated {
-                Task {
-                    try? await SupabaseManager.shared.removeCompletion(
-                        habitId: habit.id, date: targetDay)
-                }
-            }
-        } else {
-            // Add completion
-            let newCompletion = HabitCompletion(date: targetDay, habit: habit)
-            modelContext.insert(newCompletion)
-            habit.completions.append(newCompletion)
-            if auth.isAuthenticated, let userId = auth.currentUserId {
-                Task {
-                    try? await SupabaseManager.shared.logCompletionWithId(
-                        id: newCompletion.id,
-                        habitId: habit.id,
-                        userId: userId,
-                        date: targetDay
-                    )
-                }
-            }
-        }
-
-        try? modelContext.save()
     }
 
     struct CalendarDay: Identifiable {
