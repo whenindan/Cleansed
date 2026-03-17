@@ -85,6 +85,29 @@ xcodebuild test \
   -destination 'platform=iOS Simulator,name=iPhone 15'
 ```
 
+## Development Notes
+
+### Re-enabling habit calendar editing (test mode)
+
+To allow tapping any day in the habit detail calendar to toggle completions (useful for seeding test data):
+
+1. **`Cleansed/Views/HabitDetailView.swift`** — add back the flag and function:
+   ```swift
+   // TEST MODE: Set to true to enable calendar editing for testing
+   private let enableCalendarEditing = true
+   ```
+   Add the `toggleCompletion(for:)` function (accepts any `Date`, inserts/removes a `HabitCompletion` in SwiftData + Supabase), then wire the calendar cells:
+   ```swift
+   onTap: enableCalendarEditing ? { toggleCompletion(for: day.date) } : nil
+   ```
+
+2. **`Cleansed/Views/HabitRowView.swift`** — to also allow tapping past days in the 7-day row, change:
+   ```swift
+   .disabled(state != .today)   // production
+   // to:
+   .disabled(state == .future)  // test mode (allows past-day toggles)
+   ```
+
 ## Key Files
 
 - `Cleansed/CleansedApp.swift` - app entry + SwiftData container
