@@ -38,6 +38,9 @@ struct WidgetSettingsView: View {
         "widget.large.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
     private var largeTodosSpacing: Int = 5
     @AppStorage(
+        "widget.large.fontWeight", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    private var largeFontWeight: String = "medium"
+    @AppStorage(
         "widget.large.useCustomBackground",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
     private var largeUseCustomBackground: Bool = false
@@ -67,6 +70,9 @@ struct WidgetSettingsView: View {
         "widget.medium.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
     private var mediumTodosSpacing: Int = 5
     @AppStorage(
+        "widget.medium.fontWeight", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    private var mediumFontWeight: String = "medium"
+    @AppStorage(
         "widget.medium.useCustomBackground",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
     private var mediumUseCustomBackground: Bool = false
@@ -95,6 +101,9 @@ struct WidgetSettingsView: View {
     @AppStorage(
         "widget.small.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
     private var smallTodosSpacing: Int = 4
+    @AppStorage(
+        "widget.small.fontWeight", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    private var smallFontWeight: String = "medium"
     @AppStorage(
         "widget.small.useCustomBackground",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
@@ -157,6 +166,25 @@ struct WidgetSettingsView: View {
                         .onChange(of: fontSize.wrappedValue) { _, _ in
                             reloadWidgets()
                         }
+                }
+
+                // Font Weight
+                HStack {
+                    Image(systemName: "bold")
+                        .frame(width: 30)
+                    Text("Weight")
+                    Spacer()
+                    Picker("", selection: fontWeight) {
+                        Text("Light").tag("light")
+                        Text("Regular").tag("regular")
+                        Text("Medium").tag("medium")
+                        Text("Semibold").tag("semibold")
+                        Text("Bold").tag("bold")
+                    }
+                    .pickerStyle(.menu)
+                    .onChange(of: fontWeight.wrappedValue) { _, _ in
+                        reloadWidgets()
+                    }
                 }
 
                 // Alignment
@@ -292,6 +320,14 @@ struct WidgetSettingsView: View {
         }
     }
 
+    private var fontWeight: Binding<String> {
+        switch selectedFamily {
+        case .systemSmall: return $smallFontWeight
+        case .systemMedium: return $mediumFontWeight
+        default: return $largeFontWeight
+        }
+    }
+
     private var alignment: Binding<String> {
         switch selectedFamily {
         case .systemSmall: return $smallAlignment
@@ -346,6 +382,7 @@ struct WidgetSettingsView: View {
         var hasher = Hasher()
         hasher.combine(isLowercase.wrappedValue)
         hasher.combine(fontSize.wrappedValue)
+        hasher.combine(fontWeight.wrappedValue)
         hasher.combine(alignment.wrappedValue)
         hasher.combine(horizontalPadding.wrappedValue)
         hasher.combine(verticalPadding.wrappedValue)
@@ -367,6 +404,7 @@ struct WidgetSettingsView: View {
         // Large
         largeIsLowercase = true
         largeFontSize = 25
+        largeFontWeight = "medium"
         largeAlignment = "leading"
         largeHorizontalPadding = 13
         largeVerticalPadding = 10
@@ -377,6 +415,7 @@ struct WidgetSettingsView: View {
         // Medium
         mediumIsLowercase = true
         mediumFontSize = 18
+        mediumFontWeight = "medium"
         mediumAlignment = "leading"
         mediumHorizontalPadding = 15
         mediumVerticalPadding = 15
@@ -387,6 +426,7 @@ struct WidgetSettingsView: View {
         // Small
         smallIsLowercase = true
         smallFontSize = 19
+        smallFontWeight = "medium"
         smallAlignment = "leading"
         smallHorizontalPadding = 10
         smallVerticalPadding = 10
