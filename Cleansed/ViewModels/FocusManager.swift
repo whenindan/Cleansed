@@ -36,11 +36,13 @@ final class ScreenTimeManager {
             try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
             await MainActor.run {
                 self.authorizationStatus = .approved
+                UserDefaults.standard.set(true, forKey: "hasGrantedScreenTime")
             }
         } catch {
             print("Screen Time authorization failed: \(error)")
             await MainActor.run {
                 self.authorizationStatus = .denied
+                UserDefaults.standard.set(false, forKey: "hasGrantedScreenTime")
             }
         }
     }
@@ -50,10 +52,19 @@ final class ScreenTimeManager {
         switch AuthorizationCenter.shared.authorizationStatus {
         case .approved:
             authorizationStatus = .approved
+            UserDefaults.standard.set(true, forKey: "hasGrantedScreenTime")
         case .denied:
             authorizationStatus = .denied
+            UserDefaults.standard.set(false, forKey: "hasGrantedScreenTime")
         case .notDetermined:
-            authorizationStatus = .notDetermined
+            if UserDefaults.standard.bool(forKey: "hasGrantedScreenTime") {
+                // The framework might be returning .notDetermined temporarily
+                Task {
+                    await requestAuthorization()
+                }
+            } else {
+                authorizationStatus = .notDetermined
+            }
         @unknown default:
             authorizationStatus = .notDetermined
         }
