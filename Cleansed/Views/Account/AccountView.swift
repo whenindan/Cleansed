@@ -52,13 +52,6 @@ struct AccountView: View {
                     Text("Settings")
                 }
 
-                Section {
-                    NavigationLink(destination: PlanView()) {
-                        Label("Plan", systemImage: "creditcard")
-                    }
-                } header: {
-                    Text("Plan")
-                }
             }
             .toolbar(.hidden, for: .navigationBar)
         }

@@ -54,6 +54,10 @@ class WidgetSettings {
     var largeTodosSpacing: Int = 5
 
     @AppStorage(
+        "widget.large.fontWeight", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var largeFontWeight: String = "medium"
+
+    @AppStorage(
         "widget.large.useCustomBackground",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
     var largeUseCustomBackground: Bool = false
@@ -90,6 +94,10 @@ class WidgetSettings {
     var mediumTodosSpacing: Int = 5
 
     @AppStorage(
+        "widget.medium.fontWeight", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var mediumFontWeight: String = "medium"
+
+    @AppStorage(
         "widget.medium.useCustomBackground",
         store: UserDefaults(suiteName: "group.com.cleansed.shared"))
     var mediumUseCustomBackground: Bool = false
@@ -124,6 +132,10 @@ class WidgetSettings {
     @AppStorage(
         "widget.small.todosSpacing", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
     var smallTodosSpacing: Int = 4
+
+    @AppStorage(
+        "widget.small.fontWeight", store: UserDefaults(suiteName: "group.com.cleansed.shared"))
+    var smallFontWeight: String = "medium"
 
     @AppStorage(
         "widget.small.useCustomBackground",
@@ -201,6 +213,27 @@ class WidgetSettings {
         }
     }
 
+    func fontWeight(for family: WidgetFamily) -> Font.Weight {
+        let weightString: String
+        switch family {
+        case .systemSmall: weightString = smallFontWeight
+        case .systemMedium: weightString = mediumFontWeight
+        default: weightString = largeFontWeight
+        }
+        switch weightString {
+        case "ultraLight": return .ultraLight
+        case "thin": return .thin
+        case "light": return .light
+        case "regular": return .regular
+        case "medium": return .medium
+        case "semibold": return .semibold
+        case "bold": return .bold
+        case "heavy": return .heavy
+        case "black": return .black
+        default: return .medium
+        }
+    }
+
     func useCustomBackground(for family: WidgetFamily) -> Bool {
         switch family {
         case .systemSmall: return smallUseCustomBackground
@@ -215,6 +248,7 @@ class WidgetSettings {
         // Large
         largeIsLowercase = true
         largeFontSize = 25
+        largeFontWeight = "medium"
         largeAlignment = "leading"
         largeHorizontalPadding = 13
         largeVerticalPadding = 10
@@ -225,6 +259,7 @@ class WidgetSettings {
         // Medium
         mediumIsLowercase = true
         mediumFontSize = 18
+        mediumFontWeight = "medium"
         mediumAlignment = "leading"
         mediumHorizontalPadding = 15
         mediumVerticalPadding = 15
@@ -235,6 +270,7 @@ class WidgetSettings {
         // Small
         smallIsLowercase = true
         smallFontSize = 19
+        smallFontWeight = "medium"
         smallAlignment = "leading"
         smallHorizontalPadding = 10
         smallVerticalPadding = 10
@@ -383,7 +419,7 @@ struct TodoRowView: View {
         HStack {
             Button(intent: ToggleTodoIntent(todoId: todo.id.uuidString)) {
                 Text(styledTitle)
-                    .font(.system(size: currentFontSize))
+                    .font(.system(size: currentFontSize, weight: settings.fontWeight(for: family)))
                     .lineLimit(1)
             }
             .buttonStyle(.plain)
