@@ -14,13 +14,13 @@ struct WidgetPreviewView: View {
     var family: WidgetFamily = .systemLarge
 
     let sampleTodos = [
-        ("1 leetcode question", false),
-        ("book hair appointment", false),
-        ("buy air tickets to shanghai", false),
-        ("improve paywall page", false),
-        ("tutoring eric", false),
-        ("tutoring alexandra", true),
-        ("jp morgan chase & co. - codi...", true),
+        ("go for a morning run", false),
+        ("read 20 pages", false),
+        ("call mom", false),
+        ("meal prep for the week", false),
+        ("review pull requests", false),
+        ("meditate for 10 minutes", true),
+        ("drink 8 glasses of water", true),
     ]
 
     var body: some View {
