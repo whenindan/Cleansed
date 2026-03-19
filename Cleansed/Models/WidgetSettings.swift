@@ -399,16 +399,8 @@ struct TodoRowView: View {
     let family: WidgetFamily
     let settings = WidgetSettings.shared
 
-    private var styledTitle: AttributedString {
-        let title = settings.isLowercase(for: family) ? todo.title.lowercased() : todo.title
-        var attr = AttributedString(title)
-        if todo.isCompleted {
-            attr.strikethroughStyle = .single
-            attr.foregroundColor = .secondary
-        } else {
-            attr.foregroundColor = .primary
-        }
-        return attr
+    private var displayTitle: String {
+        return settings.isLowercase(for: family) ? todo.title.lowercased() : todo.title
     }
 
     private var currentFontSize: CGFloat {
@@ -418,8 +410,10 @@ struct TodoRowView: View {
     var body: some View {
         HStack {
             Button(intent: ToggleTodoIntent(todoId: todo.id.uuidString)) {
-                Text(styledTitle)
+                Text(displayTitle)
                     .font(.system(size: currentFontSize, weight: settings.fontWeight(for: family)))
+                    .strikethrough(todo.isCompleted)
+                    .foregroundColor(todo.isCompleted ? .secondary : .primary)
                     .lineLimit(1)
             }
             .buttonStyle(.plain)
