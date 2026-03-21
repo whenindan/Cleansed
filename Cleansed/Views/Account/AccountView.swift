@@ -4,6 +4,8 @@ import SwiftUI
 struct AccountView: View {
     @EnvironmentObject var auth: AuthManager
     @Environment(\.modelContext) private var modelContext
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @State private var showTutorial = false
 
     var body: some View {
         NavigationStack {
@@ -42,9 +44,21 @@ struct AccountView: View {
                 }
 
                 Section {
-                    NavigationLink(destination: SettingsView()) {
-                        Label("Settings", systemImage: "gear")
+                    Picker(selection: $appTheme) {
+                        ForEach(AppTheme.allCases) { theme in
+                            Text(theme.rawValue).tag(theme)
+                        }
+                    } label: {
+                        Label("Appearance", systemImage: "paintbrush.fill")
                     }
+
+                    Button {
+                        showTutorial = true
+                    } label: {
+                        Label("Tutorial", systemImage: "book.fill")
+                    }
+                    .foregroundStyle(Color.primary)
+
                     NavigationLink(destination: WidgetSettingsView()) {
                         Label("Widget", systemImage: "square.stack.3d.up.fill")
                     }
@@ -53,7 +67,10 @@ struct AccountView: View {
                 }
 
             }
-            .toolbar(.hidden, for: .navigationBar)
+            .navigationTitle("Account")
+            .fullScreenCover(isPresented: $showTutorial) {
+                TutorialView()
+            }
         }
     }
 }
