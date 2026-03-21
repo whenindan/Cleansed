@@ -9,6 +9,8 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @AppStorage("hasSeenTutorial") private var hasSeenTutorial = false
+    @State private var showTutorial = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -42,6 +44,15 @@ struct MainTabView: View {
             if url.scheme == "cleansed", url.host == "todos" {
                 selectedTab = 0
             }
+        }
+        .onAppear {
+            if !hasSeenTutorial {
+                showTutorial = true
+                hasSeenTutorial = true
+            }
+        }
+        .fullScreenCover(isPresented: $showTutorial) {
+            TutorialView()
         }
     }
 }
