@@ -10,53 +10,7 @@ struct HabitDetailView: View {
     @State private var editedColorHex: String = "#A154F2"
     @State private var editedIconName: String = "flame.fill"
     @State private var isCustomizingAppearance: Bool = false
-    @State private var iconSearchText: String = ""
     @State private var selectedColor: Color = .purple
-
-    private let colors: [(String, String)] = [
-        ("#A154F2", "Purple"),
-        ("#5C99F2", "Blue"),
-        ("#35F28A", "Green"),
-        ("#F2C035", "Yellow"),
-        ("#F26D85", "Red"),
-        ("#5E5CE6", "Indigo"),
-        ("#FFB347", "Orange"),
-        ("#14B8A6", "Teal"),
-        ("#EC4899", "Pink"),
-        ("#F59E0B", "Amber"),
-    ]
-
-    private let icons = [
-        "flame.fill", "moon.fill", "sun.max.fill", "book.fill",
-        "heart.fill", "bolt.fill", "leaf.fill", "star.fill",
-        "figure.walk", "music.note", "paintbrush.fill", "drop.fill",
-        "pencil", "dumbbell.fill", "brain.head.profile", "bed.double.fill",
-        "airplane", "car.fill", "bicycle", "tram.fill",
-        "cart.fill", "bag.fill", "creditcard.fill", "banknote.fill",
-        "cross.case.fill", "pills.fill", "stethoscope", "syringe.fill",
-        "cup.and.saucer.fill", "wineglass.fill", "fork.knife", "takeoutbag.and.cup.and.straw.fill",
-        "gamecontroller.fill", "tv.fill", "headphones", "pianokeys",
-        "pawprint.fill", "tortoise.fill", "ladybug.fill", "ant.fill",
-        "house.fill", "building.2.fill", "tent.fill", "tree.fill",
-        "graduationcap.fill", "briefcase.fill", "display", "laptopcomputer",
-        "hammer.fill", "wrench.and.screwdriver.fill", "gearshape.fill", "scissors",
-        "magnifyingglass", "lightbulb.fill", "camera.fill", "video.fill",
-        "mic.fill", "message.fill", "phone.fill", "envelope.fill",
-        "mappin.and.ellipse", "map.fill", "clock.fill", "alarm.fill",
-        "timer", "stopwatch.fill", "calendar", "list.bullet",
-        "checklist", "rosette", "trophy.fill", "medal.fill",
-        "gift.fill", "balloon.2.fill", "party.popper.fill", "sparkles",
-        "smiley.fill", "hand.thumbsup.fill", "figure.run", "figure.yoga",
-        "water.waves", "flame", "drop", "cloud.rain.fill",
-    ]
-
-    private var filteredIcons: [String] {
-        if iconSearchText.isEmpty {
-            return icons
-        } else {
-            return icons.filter { $0.localizedCaseInsensitiveContains(iconSearchText) }
-        }
-    }
 
     private var accentColor: Color {
         Color(hex: editedColorHex) ?? .purple
@@ -237,65 +191,10 @@ struct HabitDetailView: View {
                     .padding(.vertical, 8)
 
                 // Icon Picker
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Icon")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-
-                    // Search Bar
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                        TextField("Search icons...", text: $iconSearchText)
-                            .disableAutocorrection(true)
-
-                        if !iconSearchText.isEmpty {
-                            Button {
-                                iconSearchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
-                            }
-                        }
+                IconPickerView(selection: $editedIconName, accentColor: accentColor, columns: 7, itemSize: 40)
+                    .onChange(of: editedIconName) { _, _ in
+                        saveAppearance()
                     }
-                    .padding(8)
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(10)
-
-                    ScrollView {
-                        LazyVGrid(
-                            columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 12
-                        ) {
-                            ForEach(filteredIcons, id: \.self) { icon in
-                                let isSelected = editedIconName == icon
-                                Button {
-                                    editedIconName = icon
-                                    saveAppearance()
-                                } label: {
-                                    Image(systemName: icon)
-                                        .font(.title3)
-                                        .frame(width: 40, height: 40)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(
-                                                    isSelected
-                                                        ? accentColor.opacity(0.2)
-                                                        : Color(.secondarySystemBackground))
-                                        )
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .stroke(
-                                                    isSelected ? accentColor : .clear, lineWidth: 2)
-                                        )
-                                        .foregroundColor(isSelected ? accentColor : .primary)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-                    .frame(maxHeight: 200)  // Scrollable constrained area
-                }
             }
         }
         .padding(.horizontal)

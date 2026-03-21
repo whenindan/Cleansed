@@ -401,41 +401,8 @@ struct WidgetSettingsView: View {
     }
 
     private func resetAllToDefaults() {
-        // Large
-        largeIsLowercase = true
-        largeFontSize = 25
-        largeFontWeight = "medium"
-        largeAlignment = "leading"
-        largeHorizontalPadding = 13
-        largeVerticalPadding = 10
-        largeTodosSpacing = 5
-        largeUseCustomBackground = false
-        largeBackgroundColor = "#1C1C1E"
-
-        // Medium
-        mediumIsLowercase = true
-        mediumFontSize = 18
-        mediumFontWeight = "medium"
-        mediumAlignment = "leading"
-        mediumHorizontalPadding = 15
-        mediumVerticalPadding = 15
-        mediumTodosSpacing = 5
-        mediumUseCustomBackground = false
-        mediumBackgroundColor = "#1C1C1E"
-
-        // Small
-        smallIsLowercase = true
-        smallFontSize = 19
-        smallFontWeight = "medium"
-        smallAlignment = "leading"
-        smallHorizontalPadding = 10
-        smallVerticalPadding = 10
-        smallTodosSpacing = 4
-        smallUseCustomBackground = false
-        smallBackgroundColor = "#1C1C1E"
-
+        settings.resetToDefaults()
         updateSelectedColor()
-        reloadWidgets()
     }
 }
 

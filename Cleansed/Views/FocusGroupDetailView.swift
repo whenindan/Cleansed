@@ -17,7 +17,6 @@ struct FocusGroupDetailView: View {
     @State private var showAppPicker = false
     @State private var editedName: String = ""
     @State private var editedIcon: String = ""
-    @State private var iconSearchText: String = ""
     @State private var editedColorHex: String = ""
     @State private var editedScheduleType: ScheduleType = .manual
     @State private var editedStartDate = Date()
@@ -25,51 +24,6 @@ struct FocusGroupDetailView: View {
     @State private var editedWeekdays: Set<Int> = []
     @State private var editedTimerDuration: Int = 30
     @State private var customTimerDuration: TimeInterval = 45 * 60
-
-    private let icons = [
-        "flame.fill", "moon.fill", "sun.max.fill", "book.fill",
-        "heart.fill", "bolt.fill", "leaf.fill", "star.fill",
-        "figure.walk", "music.note", "paintbrush.fill", "drop.fill",
-        "pencil", "dumbbell.fill", "brain.head.profile", "bed.double.fill",
-        "airplane", "car.fill", "bicycle", "tram.fill",
-        "cart.fill", "bag.fill", "creditcard.fill", "banknote.fill",
-        "cross.case.fill", "pills.fill", "stethoscope", "syringe.fill",
-        "cup.and.saucer.fill", "wineglass.fill", "fork.knife", "takeoutbag.and.cup.and.straw.fill",
-        "gamecontroller.fill", "tv.fill", "headphones", "pianokeys",
-        "pawprint.fill", "tortoise.fill", "ladybug.fill", "ant.fill",
-        "house.fill", "building.2.fill", "tent.fill", "tree.fill",
-        "graduationcap.fill", "briefcase.fill", "display", "laptopcomputer",
-        "hammer.fill", "wrench.and.screwdriver.fill", "gearshape.fill", "scissors",
-        "magnifyingglass", "lightbulb.fill", "camera.fill", "video.fill",
-        "mic.fill", "message.fill", "phone.fill", "envelope.fill",
-        "mappin.and.ellipse", "map.fill", "clock.fill", "alarm.fill",
-        "timer", "stopwatch.fill", "calendar", "list.bullet",
-        "checklist", "rosette", "trophy.fill", "medal.fill",
-        "gift.fill", "balloon.2.fill", "party.popper.fill", "sparkles",
-        "smiley.fill", "hand.thumbsup.fill", "figure.run", "figure.yoga",
-        "water.waves", "flame", "drop", "cloud.rain.fill",
-    ]
-
-    private var filteredIcons: [String] {
-        if iconSearchText.isEmpty {
-            return icons
-        } else {
-            return icons.filter { $0.localizedCaseInsensitiveContains(iconSearchText) }
-        }
-    }
-
-    private let colors: [(String, String)] = [
-        ("#5E5CE6", "Indigo"),
-        ("#FF6B6B", "Red"),
-        ("#FFB347", "Orange"),
-        ("#48C774", "Green"),
-        ("#3B82F6", "Blue"),
-        ("#A855F7", "Purple"),
-        ("#EC4899", "Pink"),
-        ("#14B8A6", "Teal"),
-        ("#F59E0B", "Amber"),
-        ("#6B7280", "Gray"),
-    ]
 
     private var accentColor: Color {
         Color(hex: editedColorHex) ?? .purple
@@ -126,8 +80,7 @@ struct FocusGroupDetailView: View {
                     get: { group.isEnabled },
                     set: { newValue in
                         screenTimeManager.toggleGroup(group, enabled: newValue)
-                    }
-                ))
+                    }))
             .tint(.green)
             .disabled(group.isHardBlockActive)
         }
@@ -139,101 +92,14 @@ struct FocusGroupDetailView: View {
                 .onChange(of: editedName) { _, newVal in
                     group.name = newVal
                 }
-            iconPickerView
-            colorPickerView
-        }
-    }
-
-    private var iconPickerView: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Icon")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                
-            // Search Bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-                TextField("Search icons...", text: $iconSearchText)
-                    .disableAutocorrection(true)
-
-                if !iconSearchText.isEmpty {
-                    Button {
-                        iconSearchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                    }
+            IconPickerView(selection: $editedIcon, accentColor: accentColor)
+                .onChange(of: editedIcon) { _, newVal in
+                    group.icon = newVal
                 }
-            }
-            .padding(8)
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(10)
-
-            ScrollView {
-                LazyVGrid(
-                    columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 10
-                ) {
-                    ForEach(filteredIcons, id: \.self) { icon in
-                        let isSelected = editedIcon == icon
-                        Button {
-                            editedIcon = icon
-                            group.icon = icon
-                        } label: {
-                            Image(systemName: icon)
-                                .font(.title3)
-                                .frame(width: 36, height: 36)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(isSelected ? accentColor.opacity(0.2) : Color.clear)
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(isSelected ? accentColor : .clear, lineWidth: 2)
-                                )
-                        }
-                        .buttonStyle(.plain)
-                    }
+            ColorChipPicker(colors: FocusGroupColors.all, selection: $editedColorHex)
+                .onChange(of: editedColorHex) { _, newVal in
+                    group.colorHex = newVal
                 }
-                .padding(.vertical, 4)
-            }
-            .frame(maxHeight: 200) // Scrollable constrained area
-        }
-    }
-
-    private var colorPickerView: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Color")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible()), count: 5),
-                spacing: 10
-            ) {
-                ForEach(colors, id: \.0) { hex, _ in
-                    let chipColor = Color(hex: hex) ?? .gray
-                    let isSelected = editedColorHex == hex
-                    Button {
-                        editedColorHex = hex
-                        group.colorHex = hex
-                    } label: {
-                        Circle()
-                            .fill(chipColor)
-                            .frame(width: 32, height: 32)
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.primary, lineWidth: isSelected ? 3 : 0)
-                            )
-                            .overlay(
-                                Image(systemName: "checkmark")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.white)
-                                    .opacity(isSelected ? 1 : 0)
-                            )
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
         }
     }
 
@@ -296,8 +162,7 @@ struct FocusGroupDetailView: View {
                     displayedComponents: .hourAndMinute
                 )
                 .onChange(of: editedStartDate) { _, newVal in
-                    let comps = Calendar.current.dateComponents(
-                        [.hour, .minute], from: newVal)
+                    let comps = Calendar.current.dateComponents([.hour, .minute], from: newVal)
                     group.startHour = comps.hour ?? 22
                     group.startMinute = comps.minute ?? 0
                 }
@@ -308,61 +173,25 @@ struct FocusGroupDetailView: View {
                     displayedComponents: .hourAndMinute
                 )
                 .onChange(of: editedEndDate) { _, newVal in
-                    let comps = Calendar.current.dateComponents(
-                        [.hour, .minute], from: newVal)
+                    let comps = Calendar.current.dateComponents([.hour, .minute], from: newVal)
                     group.endHour = comps.hour ?? 7
                     group.endMinute = comps.minute ?? 0
                 }
 
-                weekdayPicker
+                WeekdayPickerView(selection: $editedWeekdays, accentColor: accentColor)
+                    .onChange(of: editedWeekdays) { _, newVal in
+                        group.weekdays = Array(newVal).sorted()
+                    }
 
             case .timer:
-                timerPicker
-            }
-        }
-    }
-
-    // MARK: - Weekday Picker
-
-    private var weekdayPicker: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Repeat on")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            HStack(spacing: 6) {
-                ForEach(1...7, id: \.self) { day in
-                    let symbol = Calendar.current.shortWeekdaySymbols[day - 1]
-                    let isSelected = editedWeekdays.contains(day)
-                    Button {
-                        if isSelected {
-                            editedWeekdays.remove(day)
-                        } else {
-                            editedWeekdays.insert(day)
-                        }
-                        group.weekdays = Array(editedWeekdays).sorted()
-                    } label: {
-                        Text(String(symbol.prefix(2)))
-                            .font(.caption.bold())
-                            .frame(width: 36, height: 36)
-                            .background(isSelected ? accentColor : Color(.tertiarySystemFill))
-                            .foregroundStyle(isSelected ? .white : Color.primary)
-                            .clipShape(Circle())
+                CountDownTimerPicker(duration: $customTimerDuration)
+                    .frame(height: 160)
+                    .onChange(of: customTimerDuration) { _, seconds in
+                        editedTimerDuration = max(1, Int(seconds / 60))
+                        group.timerDuration = editedTimerDuration
                     }
-                    .buttonStyle(.plain)
-                }
             }
         }
-    }
-
-    // MARK: - Timer Picker
-
-    private var timerPicker: some View {
-        CountDownTimerPicker(duration: $customTimerDuration)
-            .frame(height: 160)
-            .onChange(of: customTimerDuration) { _, seconds in
-                editedTimerDuration = max(1, Int(seconds / 60))
-                group.timerDuration = editedTimerDuration
-            }
     }
 
     // MARK: - Load State

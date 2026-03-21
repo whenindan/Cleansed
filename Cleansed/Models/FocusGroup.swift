@@ -32,27 +32,6 @@ enum ScheduleType: String, Codable, CaseIterable {
     }
 }
 
-/// Preset timer durations in minutes
-enum TimerDuration: Int, CaseIterable, Identifiable {
-    case thirtyMinutes = 30
-    case oneHour = 60
-    case twoHours = 120
-    case fourHours = 240
-    case custom = -1
-
-    var id: Int { rawValue }
-
-    var label: String {
-        switch self {
-        case .thirtyMinutes: return "30 min"
-        case .oneHour: return "1 hour"
-        case .twoHours: return "2 hours"
-        case .fourHours: return "4 hours"
-        case .custom: return "Custom"
-        }
-    }
-}
-
 @Model
 final class FocusGroup {
     var id: UUID

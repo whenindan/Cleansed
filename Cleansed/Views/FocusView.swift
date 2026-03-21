@@ -5,8 +5,6 @@
 //  Created by Nguyen Trong Dat on 2/14/26.
 //
 
-import DeviceActivity
-import FamilyControls
 import SwiftData
 import SwiftUI
 
@@ -93,15 +91,6 @@ struct FocusView: View {
                                 }
                             }
 
-                            //                            // MARK: - Screen Time Statistics
-                            //                            Section {
-                            //                                statisticsSection
-                            //                                    .listRowSeparator(.hidden)
-                            //                                    .listRowInsets(
-                            //                                        EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0)
-                            //                                    )
-                            //                                    .listRowBackground(Color.clear)
-                            //                            }
                         }
                     }
                     .listStyle(.plain)
@@ -191,38 +180,6 @@ struct FocusView: View {
         .padding(.vertical, 60)
     }
 
-    // MARK: - Statistics Section
-
-    private var statisticsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Screen Time")
-                .font(.headline)
-                .padding(.horizontal, 16)
-
-            VStack(spacing: 8) {
-                HStack {
-                    Image(systemName: "chart.bar.fill")
-                        .foregroundStyle(.blue)
-                    Text("Device Activity")
-                        .font(.subheadline.weight(.medium))
-                    Spacer()
-                }
-
-                // DeviceActivityReport is rendered via an extension.
-                // We display a placeholder + embed the report view.
-                DeviceActivityReportContainer()
-                    .frame(height: 300)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.primary.opacity(0.3), lineWidth: 1)
-            )
-            .padding(.horizontal, 16)
-        }
-    }
-
     // MARK: - Actions
 
     /// Reset any timer-based groups whose end date has already passed.
@@ -299,26 +256,6 @@ struct FocusGroupRow: View {
             .disabled(group.isHardBlockActive)
         }
         .padding(14)
-    }
-}
-
-// MARK: - Device Activity Report Container
-
-struct DeviceActivityReportContainer: View {
-    // Filter for the past 7 days
-    private var filter: DeviceActivityFilter {
-        let now = Date()
-        let startOfWeek = Calendar.current.date(byAdding: .day, value: -7, to: now)!
-        return DeviceActivityFilter(
-            segment: .daily(during: DateInterval(start: startOfWeek, end: now))
-        )
-    }
-
-    var body: some View {
-        DeviceActivityReport(
-            DeviceActivityReport.Context("Total Activity"),
-            filter: filter
-        )
     }
 }
 
