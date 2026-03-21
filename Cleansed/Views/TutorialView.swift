@@ -42,17 +42,6 @@ struct TutorialView: View {
                 .ignoresSafeArea()
             
             VStack {
-                // Top Skip Button
-                HStack {
-                    Spacer()
-                    Button("Skip") {
-                        dismiss()
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .padding()
-                }
-                
                 TabView(selection: $currentPage) {
                     ForEach(0..<pages.count, id: \.self) { index in
                         TutorialPageView(page: pages[index])
