@@ -79,7 +79,6 @@ struct TodoView: View {
                                 EdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24))
                         }
                         .onDelete(perform: deleteTodos)
-                        .onMove { from, to in }
                     }
                     .animation(
                         .spring(response: 0.4, dampingFraction: 0.75), value: sortedTodos.map(\.id)

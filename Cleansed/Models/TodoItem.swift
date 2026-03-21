@@ -22,7 +22,6 @@ final class TodoItem {
         self.title = title
         self.isCompleted = isCompleted
         self.createdAt = Date()
-        self.completedAt = nil
         self.sortDate = Date()
     }
 }

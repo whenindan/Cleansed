@@ -146,6 +146,7 @@ struct HabitView: View {
     private func syncFromWidget() {
         let calendar = Calendar.current
         let widgetHabits = HabitWidgetManager.shared.getHabitsFromUserDefaults()
+        var changed = false
 
         for widgetHabit in widgetHabits {
             if let existing = habits.first(where: { $0.id == widgetHabit.id }) {
@@ -162,7 +163,7 @@ struct HabitView: View {
                     // Added in widget
                     let newCompletion = HabitCompletion(date: Date(), habit: existing)
                     modelContext.insert(newCompletion)
-                    try? modelContext.save()
+                    changed = true
 
                     if auth.isAuthenticated, let userId = auth.currentUserId {
                         Task {
@@ -184,11 +185,12 @@ struct HabitView: View {
                             Task { try? await SupabaseManager.shared.deleteCompletion(id: compId) }
                         }
                         modelContext.delete(completionToRemove)
-                        try? modelContext.save()
+                        changed = true
                     }
                 }
             }
         }
+        if changed { try? modelContext.save() }
     }
 }
 
