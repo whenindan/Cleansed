@@ -41,7 +41,7 @@ struct MainTabView: View {
         .tint(Color.primary)  // Black in Light, White in Dark
         .onOpenURL { url in
             // Handle deep linking from widget
-            if url.scheme == "cleansed", url.host == "todos" {
+            if url.scheme == "clero", url.host == "todos" {
                 selectedTab = 0
             }
         }
