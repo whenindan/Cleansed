@@ -46,9 +46,9 @@ struct TutorialPage: Identifiable {
             type: .widgetTutorial,
             steps: [
                 TutorialStep(text: "long press on your home screen", icon: "hand.tap.fill"),
-                TutorialStep(text: "tap the '+' button in the corner", icon: "plus"),
-                TutorialStep(text: "search for 'cleansed' in the list", icon: "magnifyingglass"),
-                TutorialStep(text: "choose a widget and tap 'add widget'", icon: "square.on.square")
+                TutorialStep(text: "tap 'edit' in the top left corner", icon: "pencil.line"),
+                TutorialStep(text: "select 'add widget' from the menu", icon: "plus"),
+                TutorialStep(text: "search for 'cleansed' and add it", icon: "magnifyingglass")
             ]
         ),
         TutorialPage(

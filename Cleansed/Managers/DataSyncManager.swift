@@ -12,11 +12,40 @@ class DataSyncManager: ObservableObject {
     static let shared = DataSyncManager()
     private init() {}
 
-    // MARK: - Load from Supabase into SwiftData (called on sign-in)
+    // All in-memory — reset each launch so cold-start always picks up remote changes.
+    private var lastSyncedUserId: UUID?
+    private var lastSyncedAt: Date?
+    private var isCurrentlySyncing = false
 
+    // MARK: - Load from Supabase into SwiftData (called on sign-in / cold start)
+
+    /// Full sync. Guarded against double-calls within the same session startup
+    /// (both HabitView and TodoView fire .task on the same launch).
     func loadFromSupabase(userId: UUID, context: ModelContext) async {
+        guard lastSyncedUserId != userId else { return }
         await loadTodos(userId: userId, context: context)
         await loadHabits(userId: userId, context: context)
+        lastSyncedUserId = userId
+        lastSyncedAt = Date()
+    }
+
+    /// Syncs only if the last sync was more than `staleAfter` seconds ago.
+    /// Called when the app returns to the foreground so long-running sessions
+    /// pick up changes made on other devices.
+    func syncIfStale(
+        userId: UUID, context: ModelContext, staleAfter: TimeInterval = 600
+    ) async {
+        guard !isCurrentlySyncing else { return }
+        if let lastDate = lastSyncedAt,
+            lastSyncedUserId == userId,
+            Date().timeIntervalSince(lastDate) < staleAfter
+        {
+            return
+        }
+        isCurrentlySyncing = true
+        defer { isCurrentlySyncing = false }
+        lastSyncedUserId = nil  // bypass the startup guard so loadFromSupabase proceeds
+        await loadFromSupabase(userId: userId, context: context)
     }
 
     // MARK: - Migrate guest data to Supabase (called when guest signs up / logs in)
@@ -29,13 +58,16 @@ class DataSyncManager: ObservableObject {
     ) async {
         await migrateTodos(userId: userId, localTodos: localTodos)
         await migrateHabits(userId: userId, localHabits: localHabits)
-        // After migration, reload from Supabase to sync IDs
+        // After migration, reload from Supabase to sync IDs (force re-sync)
+        lastSyncedUserId = nil
         await loadFromSupabase(userId: userId, context: context)
     }
 
     // MARK: - Clear local data on sign-out
 
     func clearLocalData(context: ModelContext) {
+        lastSyncedUserId = nil
+        lastSyncedAt = nil
         // IMPORTANT: context.delete(model:) is a batch delete that bypasses
         // SwiftData cascade rules, causing constraint violations when
         // HabitCompletion has a mandatory relationship back to Habit.
@@ -61,21 +93,32 @@ class DataSyncManager: ObservableObject {
     private func loadTodos(userId: UUID, context: ModelContext) async {
         do {
             let remoteTodos = try await SupabaseManager.shared.fetchTodos(userId: userId)
-
-            // Delete existing todos individually (batch delete bypasses validation)
             let existing = try context.fetch(FetchDescriptor<TodoItem>())
-            for item in existing { context.delete(item) }
-            try context.save()
+            let localById = Dictionary(uniqueKeysWithValues: existing.map { ($0.id, $0) })
+            let remoteIds = Set(remoteTodos.map { $0.id })
 
-            // Insert fresh from Supabase
             for record in remoteTodos {
-                let item = TodoItem(title: record.title, isCompleted: record.isCompleted)
-                item.id = record.id
-                if let completedAt = record.completedAt { item.completedAt = completedAt }
-                if let sortDate = record.sortDate { item.sortDate = sortDate }
-                if let createdAt = record.createdAt { item.createdAt = createdAt }
-                context.insert(item)
+                if let local = localById[record.id] {
+                    // Update mutable fields from remote
+                    local.title = record.title
+                    local.isCompleted = record.isCompleted
+                    local.completedAt = record.completedAt
+                    if let sortDate = record.sortDate { local.sortDate = sortDate }
+                } else {
+                    let item = TodoItem(title: record.title, isCompleted: record.isCompleted)
+                    item.id = record.id
+                    if let completedAt = record.completedAt { item.completedAt = completedAt }
+                    if let sortDate = record.sortDate { item.sortDate = sortDate }
+                    if let createdAt = record.createdAt { item.createdAt = createdAt }
+                    context.insert(item)
+                }
             }
+
+            // Remove local todos deleted on another device
+            for local in existing where !remoteIds.contains(local.id) {
+                context.delete(local)
+            }
+
             try context.save()
         } catch {
             print("DataSyncManager: failed to load todos: \(error)")
@@ -103,37 +146,59 @@ class DataSyncManager: ObservableObject {
 
     private func loadHabits(userId: UUID, context: ModelContext) async {
         do {
-            let remoteHabits = try await SupabaseManager.shared.fetchHabits(userId: userId)
+            // 2 parallel network calls instead of 1 + N (one per habit)
+            async let habitsFetch = SupabaseManager.shared.fetchHabits(userId: userId)
+            async let completionsFetch = SupabaseManager.shared.fetchAllCompletions(userId: userId)
+            let (remoteHabits, allRemoteCompletions) = try await (habitsFetch, completionsFetch)
 
-            // Always delete completions before habits — mandatory relationship constraint
-            let existingCompletions = try context.fetch(FetchDescriptor<HabitCompletion>())
-            for c in existingCompletions { context.delete(c) }
+            // Group all completions by habit ID up front
+            let completionsByHabitId = Dictionary(
+                grouping: allRemoteCompletions, by: { $0.habitId })
 
             let existingHabits = try context.fetch(FetchDescriptor<Habit>())
-            for h in existingHabits { context.delete(h) }
-
-            try context.save()
+            let localHabitById = Dictionary(uniqueKeysWithValues: existingHabits.map { ($0.id, $0) })
+            let remoteHabitIds = Set(remoteHabits.map { $0.id })
 
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd"
 
             for record in remoteHabits {
-                let startDate = formatter.date(from: record.startDate) ?? Date()
-                let habit = Habit(name: record.name, startDate: startDate)
-                habit.id = record.id
-                if let createdAt = record.createdAt { habit.createdAt = createdAt }
-                context.insert(habit)
+                let habit: Habit
+                if let existing = localHabitById[record.id] {
+                    existing.name = record.name
+                    habit = existing
+                } else {
+                    let startDate = formatter.date(from: record.startDate) ?? Date()
+                    let newHabit = Habit(name: record.name, startDate: startDate)
+                    newHabit.id = record.id
+                    if let createdAt = record.createdAt { newHabit.createdAt = createdAt }
+                    context.insert(newHabit)
+                    habit = newHabit
+                }
 
-                // Load completions for this habit
-                let completions = try await SupabaseManager.shared.fetchCompletions(
-                    habitId: record.id)
-                for comp in completions {
+                let remoteCompletions = completionsByHabitId[record.id] ?? []
+                let localCompletionById = Dictionary(
+                    uniqueKeysWithValues: habit.completions.map { ($0.id, $0) })
+                let remoteCompletionIds = Set(remoteCompletions.map { $0.id })
+
+                for comp in remoteCompletions where localCompletionById[comp.id] == nil {
                     let completionDate = formatter.date(from: comp.completedDate) ?? Date()
                     let hc = HabitCompletion(date: completionDate, habit: habit)
                     hc.id = comp.id
                     context.insert(hc)
                 }
+
+                // Remove completions deleted on another device
+                for local in Array(habit.completions) where !remoteCompletionIds.contains(local.id) {
+                    context.delete(local)
+                }
             }
+
+            // Remove local habits deleted on another device (cascade removes their completions)
+            for local in existingHabits where !remoteHabitIds.contains(local.id) {
+                context.delete(local)
+            }
+
             try context.save()
         } catch {
             print("DataSyncManager: failed to load habits: \(error)")

@@ -64,7 +64,15 @@ struct HabitView: View {
                     HabitWidgetManager.shared.syncHabitsToUserDefaults(habits)
                 }
                 .onChange(of: scenePhase) { _, newPhase in
-                    if newPhase == .active { syncFromWidget() }
+                    if newPhase == .active {
+                        syncFromWidget()
+                        if auth.isAuthenticated, let userId = auth.currentUserId {
+                            Task {
+                                await DataSyncManager.shared.syncIfStale(
+                                    userId: userId, context: modelContext)
+                            }
+                        }
+                    }
                 }
 
                 FAB { isAddSheetPresented = true }
