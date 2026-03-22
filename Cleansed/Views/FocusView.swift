@@ -230,9 +230,17 @@ struct FocusGroupRow: View {
 
             // Info
             VStack(alignment: .leading, spacing: 3) {
-                Text(group.name)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(Color.primary)
+                HStack(spacing: 5) {
+                    Text(group.name)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.primary)
+
+                    if group.isHardBlock {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
 
                 Text(group.scheduleDescription(at: currentTime))
                     .font(.caption)
