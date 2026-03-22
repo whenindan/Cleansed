@@ -13,6 +13,7 @@ struct TodoView: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject var auth: AuthManager
     @Query(sort: \TodoItem.createdAt, order: .reverse) private var todos: [TodoItem]
+    @State private var hasSynced = false
 
     /// Incomplete first (Oldest sortDate -> Newest), then Completed (Most recently completed -> Oldest).
     private var sortedTodos: [TodoItem] {
@@ -96,15 +97,23 @@ struct TodoView: View {
                 TodoManager.shared.syncTodosToUserDefaults(todos)
             }
             .onChange(of: scenePhase) { _, newPhase in
-                if newPhase == .active { syncFromWidget() }
+                if newPhase == .active {
+                    syncFromWidget()
+                    if auth.isAuthenticated, let userId = auth.currentUserId {
+                        Task {
+                            await DataSyncManager.shared.syncIfStale(
+                                userId: userId, context: modelContext)
+                        }
+                    }
+                }
             }
             .task {
-                // Load account todos from Supabase on appear when signed in
-                if auth.isAuthenticated, let userId = auth.currentUserId {
-                    await DataSyncManager.shared.loadFromSupabase(
-                        userId: userId, context: modelContext)
-                    TodoManager.shared.syncTodosToUserDefaults(todos)
+                guard !hasSynced, auth.isAuthenticated, let userId = auth.currentUserId else {
+                    return
                 }
+                hasSynced = true
+                await DataSyncManager.shared.loadFromSupabase(userId: userId, context: modelContext)
+                TodoManager.shared.syncTodosToUserDefaults(todos)
             }
 
             FAB { isAddSheetPresented = true }

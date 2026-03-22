@@ -112,6 +112,17 @@ class SupabaseManager {
             .value
     }
 
+    /// Fetch all completions for a user in one call (avoids N+1 per-habit fetches).
+    func fetchAllCompletions(userId: UUID) async throws -> [HabitCompletionRecord] {
+        return
+            try await supabase
+            .from("habit_completions")
+            .select()
+            .eq("user_id", value: userId.uuidString)
+            .execute()
+            .value
+    }
+
     func logCompletion(habitId: UUID, userId: UUID, date: Date = Date()) async throws {
         let dateStr = dateFormatter.string(from: date)
         try await supabase
