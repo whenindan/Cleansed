@@ -151,20 +151,29 @@ struct TutorialPageView: View {
 }
 
 struct StandardPageView: View {
+    @Environment(\.colorScheme) var colorScheme
     let page: TutorialPage
     
     var body: some View {
         VStack(spacing: 40) {
-            Image(systemName: page.icon)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 100, height: 100)
-                .foregroundStyle(Color.primary)
-                .padding(30)
-                .background(
-                    Circle()
-                        .fill(Color.primary.opacity(0.05))
-                )
+            if page.title == "welcome to clero" {
+                Image(colorScheme == .dark ? "logo-dark" : "logo-light")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 120, height: 120)
+                    .padding(20)
+            } else {
+                Image(systemName: page.icon)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 100, height: 100)
+                    .foregroundStyle(Color.primary)
+                    .padding(30)
+                    .background(
+                        Circle()
+                            .fill(Color.primary.opacity(0.05))
+                    )
+            }
             
             VStack(spacing: 16) {
                 Text(page.title)

@@ -17,7 +17,7 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         return ShieldConfiguration(
             backgroundBlurStyle: .dark, // explicitly dark blur, to avoid default light grey
             backgroundColor: .black, // solid black, 100% opacity
-            icon: UIImage(systemName: "hand.raised.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal),
+            icon: UIImage(named: "logo-light"),
             title: ShieldConfiguration.Label(
                 text: "You Are Blocked",
                 color: .white
@@ -46,7 +46,7 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         return ShieldConfiguration(
             backgroundBlurStyle: .dark, // explicitly dark blur, to avoid default light grey
             backgroundColor: .black, // solid black, 100% opacity
-            icon: UIImage(systemName: "hand.raised.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal),
+            icon: UIImage(named: "logo-light"),
             title: ShieldConfiguration.Label(
                 text: "You Are Blocked",
                 color: .white
