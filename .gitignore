@@ -23,7 +23,7 @@ DerivedData/
 
 # Personal settings
 xcuserdata/
-
+logo/
 # Xcode Project settings
 !.xcodeproj/project.pbxproj
 !.xcodeproj/xcshareddata/
