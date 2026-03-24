@@ -126,7 +126,7 @@
 		FD7AE2032F4D6175004918C7 /* DeviceActivityReportExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = DeviceActivityReportExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD7F058B2F59E7AA00894E3E /* HabitWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = HabitWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD7F059F2F59E7F000894E3E /* HabitWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HabitWidgetExtension.entitlements; sourceTree = "<group>"; };
-		FDD2B1482F40A8DF008572F8 /* Cleansed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cleansed.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FDD2B1482F40A8DF008572F8 /* Clero.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clero.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDD2B1552F40A8E1008572F8 /* CleansedTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CleansedTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDD2B15F2F40A8E1008572F8 /* CleansedUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CleansedUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDFA88A72F44B14500792EFD /* TodoWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TodoWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -428,7 +428,7 @@
 		FDD2B1492F40A8DF008572F8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FDD2B1482F40A8DF008572F8 /* Cleansed.app */,
+				FDD2B1482F40A8DF008572F8 /* Clero.app */,
 				FDD2B1552F40A8E1008572F8 /* CleansedTests.xctest */,
 				FDD2B15F2F40A8E1008572F8 /* CleansedUITests.xctest */,
 				FDFA88A72F44B14500792EFD /* TodoWidgetExtension.appex */,
@@ -595,7 +595,7 @@
 				FD7B9EF72F55138B002E5F51 /* Supabase */,
 			);
 			productName = Cleansed;
-			productReference = FDD2B1482F40A8DF008572F8 /* Cleansed.app */;
+			productReference = FDD2B1482F40A8DF008572F8 /* Clero.app */;
 			productType = "com.apple.product-type.application";
 		};
 		FDD2B1542F40A8E1008572F8 /* CleansedTests */ = {
@@ -1341,8 +1341,9 @@
 		FDD2B16A2F40A8E1008572F8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = clero_light;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = Cleansed/Cleansed.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -1361,7 +1362,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = learn.Cleansed;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = Clero;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1371,8 +1372,9 @@
 		FDD2B16B2F40A8E1008572F8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = clero_light;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = Cleansed/Cleansed.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -1391,7 +1393,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = learn.Cleansed;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = Clero;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

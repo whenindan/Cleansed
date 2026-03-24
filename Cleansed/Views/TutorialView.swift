@@ -22,7 +22,7 @@ struct TutorialPage: Identifiable {
 
     static let all: [TutorialPage] = [
         TutorialPage(
-            title: "welcome to cleansed",
+            title: "welcome to clero",
             description: "a minimalist approach to managing your productivity and digital focus.",
             icon: "leaf.fill",
             type: .standard
@@ -41,14 +41,14 @@ struct TutorialPage: Identifiable {
         ),
         TutorialPage(
             title: "adding widgets",
-            description: "bring your focus to your home screen. follow these simple steps to add cleansed widgets.",
+            description: "bring your focus to your home screen. follow these simple steps to add clero widgets.",
             icon: "square.dashed.inset.filled",
             type: .widgetTutorial,
             steps: [
                 TutorialStep(text: "long press on your home screen", icon: "hand.tap.fill"),
                 TutorialStep(text: "tap 'edit' in the top left corner", icon: "pencil.line"),
                 TutorialStep(text: "select 'add widget' from the menu", icon: "plus"),
-                TutorialStep(text: "search for 'cleansed' and add it", icon: "magnifyingglass")
+                TutorialStep(text: "search for 'clero' and add it", icon: "magnifyingglass")
             ]
         ),
         TutorialPage(
