@@ -76,7 +76,9 @@ struct AccountView: View {
                     }
 
                 }
+                .hideListSeparators()
             }
+            .background(Color(.systemBackground))
             .fullScreenCover(isPresented: $showTutorial) {
                 TutorialView()
             }
