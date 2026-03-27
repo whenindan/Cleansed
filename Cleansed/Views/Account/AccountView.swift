@@ -17,11 +17,6 @@ struct AccountView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 60, height: 60)
-                    
-                    Text("clero")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .textCase(.lowercase)
                 }
                 .padding(.vertical, 20)
 
@@ -55,8 +50,6 @@ struct AccountView: View {
                                     .foregroundStyle(Color.primary)
                             }
                         }
-                    } header: {
-                        Text("Account")
                     }
 
                     Section {
@@ -84,7 +77,6 @@ struct AccountView: View {
 
                 }
             }
-            .navigationTitle("Account")
             .fullScreenCover(isPresented: $showTutorial) {
                 TutorialView()
             }
