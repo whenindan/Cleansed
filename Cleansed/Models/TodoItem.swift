@@ -7,9 +7,10 @@
 
 import Foundation
 import SwiftData
+// TodoItem conforms to the shared sort protocol defined in TodoManager.swift
 
 @Model
-final class TodoItem {
+final class TodoItem: TodoSortable {
     var id: UUID
     var title: String
     var isCompleted: Bool

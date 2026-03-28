@@ -18,7 +18,7 @@ struct TotalActivityView: View {
                     Text("Total Screen Time")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(formatDuration(totalActivity.totalDuration))
+                    Text(formatScreenTimeDuration(totalActivity.totalDuration))
                         .font(.title2.bold())
                 }
                 Spacer()
@@ -54,14 +54,7 @@ struct TotalActivityView: View {
         .padding(16)
     }
 
-    private func formatDuration(_ interval: TimeInterval) -> String {
-        let hours = Int(interval) / 3600
-        let minutes = (Int(interval) % 3600) / 60
-        if hours > 0 {
-            return "\(hours)h \(minutes)m"
-        }
-        return "\(minutes) min"
-    }
+
 }
 
 #Preview {

@@ -9,7 +9,10 @@ import DeviceActivity
 import FamilyControls
 import Foundation
 import ManagedSettings
+import OSLog
 import SwiftUI
+
+private let logger = Logger(subsystem: "com.cleansed", category: "ScreenTime")
 
 /// Manages Screen Time authorization, app blocking, and schedule monitoring.
 @Observable
@@ -39,7 +42,7 @@ final class ScreenTimeManager {
                 UserDefaults.standard.set(true, forKey: "hasGrantedScreenTime")
             }
         } catch {
-            print("Screen Time authorization failed: \(error)")
+            logger.error("Screen Time authorization failed: \(error)")
             await MainActor.run {
                 self.authorizationStatus = .denied
                 UserDefaults.standard.set(false, forKey: "hasGrantedScreenTime")
@@ -173,7 +176,7 @@ final class ScreenTimeManager {
         do {
             try activityCenter.startMonitoring(activityName, during: schedule)
         } catch {
-            print("Failed to start monitoring schedule: \(error)")
+            logger.error("Failed to start monitoring schedule: \(error)")
         }
     }
 
@@ -204,7 +207,7 @@ final class ScreenTimeManager {
         do {
             try activityCenter.startMonitoring(activityName, during: schedule)
         } catch {
-            print("Failed to start timer monitoring: \(error)")
+            logger.error("Failed to start timer monitoring: \(error)")
         }
 
         // Also immediately enable blocking

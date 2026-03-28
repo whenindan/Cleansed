@@ -19,7 +19,7 @@ class ShieldActionExtension: ShieldActionDelegate {
         case .secondaryButtonPressed:
             completionHandler(.defer)
         @unknown default:
-            fatalError()
+            fatalError("Unhandled ShieldAction case: \(action)")
         }
     }
     

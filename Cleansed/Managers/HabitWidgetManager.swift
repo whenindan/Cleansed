@@ -39,8 +39,9 @@ class HabitWidgetManager {
     private let sharedDefaults: UserDefaults
     private let habitsKey = "habitsWidgetData"
 
-    // Fun, vibrant colors matching the mockup
     private let colors = ["#A154F2", "#F2C035", "#35F28A", "#F26D85", "#5C99F2"]
+    // Must cover the largest widget grid: 8 rows × 26 cols = up to 206 days back.
+    private let maxHabitHistoryDays = 210
 
     private init() {
         sharedDefaults = UserDefaults(suiteName: "group.com.cleansed.shared")!
@@ -54,7 +55,7 @@ class HabitWidgetManager {
 
     func syncHabitsToUserDefaults(_ habits: [Habit]) {
         let calendar = Calendar.current
-        let cutoff = calendar.date(byAdding: .day, value: -120, to: Date()) ?? Date()
+        let cutoff = calendar.date(byAdding: .day, value: -maxHabitHistoryDays, to: Date()) ?? Date()
 
         let habitData = habits.map { habit in
             let validDates = habit.completions.map { $0.date }.filter { $0 >= cutoff }

@@ -14,26 +14,10 @@ import UIKit
 // Make sure that your class name matches the NSExtensionPrincipalClass in your Info.plist.
 class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     override func configuration(shielding application: Application) -> ShieldConfiguration {
-        return ShieldConfiguration(
-            backgroundBlurStyle: .dark, // explicitly dark blur, to avoid default light grey
-            backgroundColor: .black, // solid black, 100% opacity
-            icon: UIImage(named: "logo-light"),
-            title: ShieldConfiguration.Label(
-                text: "You Are Blocked",
-                color: .white
-            ),
-            subtitle: ShieldConfiguration.Label(
-                text: application.localizedDisplayName.map {
-                    "\($0) is blocked during your focus session."
-                } ?? "This app is blocked during your focus session.",
-                color: .white
-            ),
-            primaryButtonLabel: ShieldConfiguration.Label(
-                text: "OK",
-                color: .black
-            ),
-            primaryButtonBackgroundColor: .white
-        )
+        let subtitle = application.localizedDisplayName.map {
+            "\($0) is blocked during your focus session."
+        } ?? "This app is blocked during your focus session."
+        return makeShieldConfiguration(subtitle: subtitle)
     }
 
     override func configuration(shielding application: Application, in category: ActivityCategory)
@@ -43,31 +27,27 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     }
 
     override func configuration(shielding webDomain: WebDomain) -> ShieldConfiguration {
-        return ShieldConfiguration(
-            backgroundBlurStyle: .dark, // explicitly dark blur, to avoid default light grey
-            backgroundColor: .black, // solid black, 100% opacity
-            icon: UIImage(named: "logo-light"),
-            title: ShieldConfiguration.Label(
-                text: "You Are Blocked",
-                color: .white
-            ),
-            subtitle: ShieldConfiguration.Label(
-                text: webDomain.domain.map {
-                    "\($0) is blocked during your focus session."
-                } ?? "This website is blocked during your focus session.",
-                color: .white
-            ),
-            primaryButtonLabel: ShieldConfiguration.Label(
-                text: "OK",
-                color: .black
-            ),
-            primaryButtonBackgroundColor: .white
-        )
+        let subtitle = webDomain.domain.map {
+            "\($0) is blocked during your focus session."
+        } ?? "This website is blocked during your focus session."
+        return makeShieldConfiguration(subtitle: subtitle)
     }
 
     override func configuration(shielding webDomain: WebDomain, in category: ActivityCategory)
         -> ShieldConfiguration
     {
         return configuration(shielding: webDomain)
+    }
+
+    private func makeShieldConfiguration(subtitle: String) -> ShieldConfiguration {
+        ShieldConfiguration(
+            backgroundBlurStyle: .dark,
+            backgroundColor: .black,
+            icon: UIImage(named: "logo-light"),
+            title: ShieldConfiguration.Label(text: "You Are Blocked", color: .white),
+            subtitle: ShieldConfiguration.Label(text: subtitle, color: .white),
+            primaryButtonLabel: ShieldConfiguration.Label(text: "OK", color: .black),
+            primaryButtonBackgroundColor: .white
+        )
     }
 }

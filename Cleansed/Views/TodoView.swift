@@ -18,18 +18,8 @@ struct TodoView: View {
     @AppStorage("todoFontSize") private var todoFontSize: Double = 18
     @AppStorage("todoFontWeight") private var todoFontWeight: String = "regular"
 
-    /// Incomplete first (Oldest sortDate -> Newest), then Completed (Most recently completed -> Oldest).
     private var sortedTodos: [TodoItem] {
-        todos.sorted {
-            if $0.isCompleted != $1.isCompleted { return !$0.isCompleted }
-            if $0.isCompleted {
-                let d0 = $0.completedAt ?? $0.createdAt
-                let d1 = $1.completedAt ?? $1.createdAt
-                return d0 > d1
-            } else {
-                return $0.sortDate < $1.sortDate
-            }
-        }
+        todos.sortedByCompletion()
     }
 
     @State private var isAddSheetPresented = false

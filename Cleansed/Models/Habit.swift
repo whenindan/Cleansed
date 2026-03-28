@@ -68,10 +68,10 @@ final class Habit {
         var lastDate: Date?
 
         for date in completedDates {
-            if let last = lastDate {
-                if calendar.isDate(
-                    date, inSameDayAs: calendar.date(byAdding: .day, value: 1, to: last)!)
-                {
+            if let last = lastDate,
+                let nextDay = calendar.date(byAdding: .day, value: 1, to: last)
+            {
+                if calendar.isDate(date, inSameDayAs: nextDay) {
                     currentStreak += 1
                 } else {
                     bestStreak = max(bestStreak, currentStreak)

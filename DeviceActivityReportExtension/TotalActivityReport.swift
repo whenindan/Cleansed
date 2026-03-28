@@ -25,14 +25,16 @@ struct AppUsageData: Identifiable, Sendable {
     let name: String
     let duration: TimeInterval
 
-    var formattedDuration: String {
-        let hours = Int(duration) / 3600
-        let minutes = (Int(duration) % 3600) / 60
-        if hours > 0 {
-            return "\(hours)h \(minutes)m"
-        }
-        return "\(minutes)m"
+    var formattedDuration: String { formatScreenTimeDuration(duration) }
+}
+
+func formatScreenTimeDuration(_ interval: TimeInterval) -> String {
+    let hours = Int(interval) / 3600
+    let minutes = (Int(interval) % 3600) / 60
+    if hours > 0 {
+        return "\(hours)h \(minutes)m"
     }
+    return "\(minutes)m"
 }
 
 struct TotalActivityReport: DeviceActivityReportScene {
