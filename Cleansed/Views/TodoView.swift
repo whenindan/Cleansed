@@ -47,94 +47,92 @@ struct TodoView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack(alignment: .bottomTrailing) {
-                VStack(alignment: .leading, spacing: 0) {
-                    if todos.isEmpty {
-                        ContentUnavailableView(
-                            "All clear",
-                            systemImage: "checkmark.circle",
-                            description: Text("Tap + to add a task")
-                        )
-                        .frame(maxHeight: .infinity)
-                    } else {
-                        List {
-                            ForEach(sortedTodos) { todo in
-                                Button {
-                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
-                                        todo.isCompleted.toggle()
-                                        if todo.isCompleted {
-                                            todo.completedAt = Date()
-                                        } else {
-                                            todo.completedAt = nil
-                                            todo.sortDate = Date()
-                                        }
-                                        try? modelContext.save()
-                                        TodoManager.shared.syncTodosToUserDefaults(todos)
-                                        // Mirror to Supabase if signed in
-                                        if auth.isAuthenticated {
-                                            Task {
-                                                try? await SupabaseManager.shared.completeTodo(
-                                                    id: todo.id, isCompleted: todo.isCompleted)
-                                            }
+        ZStack(alignment: .bottomTrailing) {
+            VStack(alignment: .leading, spacing: 0) {
+                if todos.isEmpty {
+                    ContentUnavailableView(
+                        "All clear",
+                        systemImage: "checkmark.circle",
+                        description: Text("Tap + to add a task")
+                    )
+                    .frame(maxHeight: .infinity)
+                } else {
+                    List {
+                        ForEach(sortedTodos) { todo in
+                            Button {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                                    todo.isCompleted.toggle()
+                                    if todo.isCompleted {
+                                        todo.completedAt = Date()
+                                    } else {
+                                        todo.completedAt = nil
+                                        todo.sortDate = Date()
+                                    }
+                                    try? modelContext.save()
+                                    TodoManager.shared.syncTodosToUserDefaults(todos)
+                                    // Mirror to Supabase if signed in
+                                    if auth.isAuthenticated {
+                                        Task {
+                                            try? await SupabaseManager.shared.completeTodo(
+                                                id: todo.id, isCompleted: todo.isCompleted)
                                         }
                                     }
-                                } label: {
-                                    Text(todo.title)
-                                        .font(.system(size: CGFloat(todoFontSize), weight: fontWeight, design: .default))
-                                        .foregroundStyle(
-                                            todo.isCompleted ? Color.secondary : Color.primary
-                                        )
-                                        .strikethrough(todo.isCompleted, color: Color.secondary)
-                                        .animation(.easeInOut(duration: 0.2), value: todo.isCompleted)
                                 }
-                                .buttonStyle(.plain)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(
-                                    EdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24))
+                            } label: {
+                                Text(todo.title)
+                                    .font(.system(size: CGFloat(todoFontSize), weight: fontWeight, design: .default))
+                                    .foregroundStyle(
+                                        todo.isCompleted ? Color.secondary : Color.primary
+                                    )
+                                    .strikethrough(todo.isCompleted, color: Color.secondary)
+                                    .animation(.easeInOut(duration: 0.2), value: todo.isCompleted)
                             }
-                            .onDelete(perform: deleteTodos)
+                            .buttonStyle(.plain)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(
+                                EdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24))
                         }
-                        .animation(
-                            .spring(response: 0.4, dampingFraction: 0.75), value: sortedTodos.map(\.id)
-                        )
-                        .padding(.top, 24)
-                        .hideListSeparators()
+                        .onDelete(perform: deleteTodos)
                     }
+                    .animation(
+                        .spring(response: 0.4, dampingFraction: 0.75), value: sortedTodos.map(\.id)
+                    )
+                    .padding(.top, 24)
+                    .hideListSeparators()
                 }
-                .background(Color(.systemBackground))
-                .onChange(of: todos) { _, newTodos in
-                    TodoManager.shared.syncTodosToUserDefaults(newTodos)
-                }
-                .onAppear {
-                    syncFromWidget()
-                    TodoManager.shared.syncTodosToUserDefaults(todos)
-                }
-                .onChange(of: scenePhase) { _, newPhase in
-                    if newPhase == .active {
-                        syncFromWidget()
-                        if auth.isAuthenticated, let userId = auth.currentUserId {
-                            Task {
-                                await DataSyncManager.shared.syncIfStale(
-                                    userId: userId, context: modelContext)
-                            }
-                        }
-                    }
-                }
-                .task {
-                    guard !hasSynced, auth.isAuthenticated, let userId = auth.currentUserId else {
-                        return
-                    }
-                    hasSynced = true
-                    await DataSyncManager.shared.loadFromSupabase(userId: userId, context: modelContext)
-                    TodoManager.shared.syncTodosToUserDefaults(todos)
-                }
-
-                FAB { isAddSheetPresented = true }
-                    .padding(24)
             }
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+            .background(Color(.systemBackground))
+            .onChange(of: todos) { _, newTodos in
+                TodoManager.shared.syncTodosToUserDefaults(newTodos)
+            }
+            .onAppear {
+                syncFromWidget()
+                TodoManager.shared.syncTodosToUserDefaults(todos)
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    syncFromWidget()
+                    if auth.isAuthenticated, let userId = auth.currentUserId {
+                        Task {
+                            await DataSyncManager.shared.syncIfStale(
+                                userId: userId, context: modelContext)
+                        }
+                    }
+                }
+            }
+            .task {
+                guard !hasSynced, auth.isAuthenticated, let userId = auth.currentUserId else {
+                    return
+                }
+                hasSynced = true
+                await DataSyncManager.shared.loadFromSupabase(userId: userId, context: modelContext)
+                TodoManager.shared.syncTodosToUserDefaults(todos)
+            }
+
+            // Customization Menu Button (Top Right)
+            VStack {
+                HStack {
+                    Spacer()
                     Menu {
                         Section("Font Size") {
                             Button { todoFontSize += 1 } label: {
@@ -167,11 +165,21 @@ struct TodoView: View {
                             Label("Reset Defaults", systemImage: "arrow.counterclockwise")
                         }
                     } label: {
-                        Image(systemName: "ellipsis.circle")
+                        Image(systemName: "ellipsis")
                             .font(.system(size: 20))
+                            .foregroundStyle(Color.primary)
+                            .frame(width: 44, height: 44)
+                            .background(Color(.systemBackground).opacity(0.1))
+                            .clipShape(Circle())
                     }
+                    .padding(.top, 8)
+                    .padding(.trailing, 16)
                 }
+                Spacer()
             }
+
+            FAB { isAddSheetPresented = true }
+                .padding(24)
         }
         .sheet(isPresented: $isAddSheetPresented) {
             NavigationStack {
