@@ -9,8 +9,30 @@ import Foundation
 import SwiftData
 import WidgetKit
 
+/// Shared sort ordering for todos: incomplete first (oldest sortDate → newest),
+/// then completed (most recently completed → oldest).
+protocol TodoSortable {
+    var isCompleted: Bool { get }
+    var completedAt: Date? { get }
+    var createdAt: Date { get }
+    var sortDate: Date { get }
+}
+
+extension Array where Element: TodoSortable {
+    func sortedByCompletion() -> [Element] {
+        sorted {
+            if $0.isCompleted != $1.isCompleted { return !$0.isCompleted }
+            if $0.isCompleted {
+                return ($0.completedAt ?? $0.createdAt) > ($1.completedAt ?? $1.createdAt)
+            } else {
+                return $0.sortDate < $1.sortDate
+            }
+        }
+    }
+}
+
 /// Simplified todo data structure for widget communication
-struct TodoItemData: Codable {
+struct TodoItemData: Codable, TodoSortable {
     let id: UUID
     let title: String
     let isCompleted: Bool
@@ -27,7 +49,6 @@ class TodoManager {
     private let todosKey = "todos"
 
     private init() {
-        // Initialize with App Group - will be configured after adding capability
         sharedDefaults = UserDefaults(suiteName: "group.com.cleansed.shared")!
     }
 
@@ -90,28 +111,8 @@ class TodoManager {
         }
     }
 
-    /// Sort todos:
-    /// 1. Incomplete first
-    ///    - Sort by `sortDate` ASCENDING (Oldest first).
-    ///    - New items (created now) -> Bottom.
-    ///    - Unchecked items (sortDate updated to now) -> Bottom.
-    /// 2. Completed last
-    ///    - Sort by `completedAt` DESCENDING (Newest completion first).
-    ///    - Just-completed items -> Top of completed section.
     private func sorted(_ todos: [TodoItemData]) -> [TodoItemData] {
-        todos.sorted {
-            if $0.isCompleted != $1.isCompleted { return !$0.isCompleted }  // Incomplete first
-
-            if $0.isCompleted {
-                // Completed: Most recently completed at the top
-                let d0 = $0.completedAt ?? $0.createdAt
-                let d1 = $1.completedAt ?? $1.createdAt
-                return d0 > d1
-            } else {
-                // Incomplete: Oldest sortDate first (New items at bottom)
-                return $0.sortDate < $1.sortDate
-            }
-        }
+        todos.sortedByCompletion()
     }
 
     /// Trigger widget timeline reload

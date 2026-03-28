@@ -4,8 +4,11 @@
 //
 
 import Foundation
+import OSLog
 import Supabase
 import SwiftData
+
+private let logger = Logger(subsystem: "com.cleansed", category: "Auth")
 
 @MainActor
 class AuthManager: ObservableObject {
@@ -93,7 +96,7 @@ class AuthManager: ObservableObject {
             try await supabase.auth.session(from: url)
             await checkSession()
         } catch {
-            print("Deep link auth error: \(error)")
+            logger.error("Deep link auth error: \(error)")
         }
     }
 }

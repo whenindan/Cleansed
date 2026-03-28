@@ -78,7 +78,7 @@ struct HabitWidgetEntryView: View {
 
     var body: some View {
         HabitWidgetContentView(family: family, entry: entry)
-            .containerBackground(Color(hex: "#1C1C1E") ?? .black, for: .widget)
+            .containerBackground(Color(.systemBackground), for: .widget)
             .widgetURL(URL(string: "cleansed://habits"))
     }
 }
@@ -157,7 +157,7 @@ struct HabitSingleView: View {
 
                 Text(habit.name)
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                     .lineLimit(1)
 
                 Spacer()
@@ -166,7 +166,7 @@ struct HabitSingleView: View {
                 Button(intent: ToggleHabitIntent(habitId: habit.id.uuidString)) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(isCompletedToday ? Color.clear : Color.white.opacity(0.1))
+                            .fill(isCompletedToday ? Color.clear : Color.primary.opacity(0.1))
                             .frame(width: 32, height: 32)
 
                         if isCompletedToday {
@@ -239,7 +239,7 @@ struct HabitContributionGrid: View {
                         ForEach(0..<rows, id: \.self) { row in
                             let isCompleted = grid[row][col]
                             RoundedRectangle(cornerRadius: squareCornerRadius)
-                                .fill(isCompleted ? themeColor : Color.white.opacity(0.12))
+                                .fill(isCompleted ? themeColor : Color.primary.opacity(0.12))
                                 .frame(width: squareSize, height: squareSize)
                         }
                     }

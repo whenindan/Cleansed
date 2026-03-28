@@ -4,7 +4,10 @@
 //
 
 import Foundation
+import OSLog
 import SwiftData
+
+private let logger = Logger(subsystem: "com.cleansed", category: "DataSync")
 
 /// Coordinates syncing todos and habits between Supabase (cloud) and SwiftData (local mirror).
 @MainActor
@@ -84,7 +87,7 @@ class DataSyncManager: ObservableObject {
 
             try context.save()
         } catch {
-            print("DataSyncManager: failed to clear local data: \(error)")
+            logger.error("Failed to clear local data: \(error)")
         }
     }
 
@@ -121,7 +124,7 @@ class DataSyncManager: ObservableObject {
 
             try context.save()
         } catch {
-            print("DataSyncManager: failed to load todos: \(error)")
+            logger.error("Failed to load todos: \(error)")
         }
     }
 
@@ -137,7 +140,7 @@ class DataSyncManager: ObservableObject {
                     userId: userId
                 )
             } catch {
-                print("DataSyncManager: failed to migrate todo '\(todo.title)': \(error)")
+                logger.error("Failed to migrate todo '\(todo.title)': \(error)")
             }
         }
     }
@@ -201,7 +204,7 @@ class DataSyncManager: ObservableObject {
 
             try context.save()
         } catch {
-            print("DataSyncManager: failed to load habits: \(error)")
+            logger.error("Failed to load habits: \(error)")
         }
     }
 
@@ -226,7 +229,7 @@ class DataSyncManager: ObservableObject {
                     )
                 }
             } catch {
-                print("DataSyncManager: failed to migrate habit '\(habit.name)': \(error)")
+                logger.error("Failed to migrate habit '\(habit.name)': \(error)")
             }
         }
     }
