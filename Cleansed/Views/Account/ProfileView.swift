@@ -4,7 +4,11 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var auth: AuthManager
     @Environment(\.modelContext) private var modelContext
-    
+
+    @State private var showDeleteAlert = false
+    @State private var isDeletingAccount = false
+    @State private var deleteError: String?
+
     var body: some View {
         List {
             Section {
@@ -13,29 +17,34 @@ struct ProfileView: View {
                         Label(email, systemImage: "person.circle.fill")
                             .foregroundStyle(Color.primary)
                     }
-                    
-                    Button {
-                        // Placeholder for Change Password
-                    } label: {
+
+                    NavigationLink(destination: ChangePasswordView().environmentObject(auth)) {
                         Label("Change Password", systemImage: "key.fill")
+                            .foregroundStyle(Color.primary)
                     }
-                    .foregroundStyle(Color.primary)
-                    
+
                     Button(role: .destructive) {
                         Task {
-                            // Clear local mirror data before signing out
                             DataSyncManager.shared.clearLocalData(context: modelContext)
                             try? await auth.signOut()
                         }
                     } label: {
                         Label("Sign Out", systemImage: "arrow.backward.circle")
                     }
-                    
+
                     Button(role: .destructive) {
-                        // Placeholder for Delete Account
+                        showDeleteAlert = true
                     } label: {
-                        Label("Delete Account", systemImage: "trash.fill")
+                        if isDeletingAccount {
+                            HStack {
+                                ProgressView()
+                                Text("Deleting…")
+                            }
+                        } else {
+                            Label("Delete Account", systemImage: "trash.fill")
+                        }
                     }
+                    .disabled(isDeletingAccount)
                 } else if auth.isGuest {
                     Label("Guest", systemImage: "person.circle")
                         .foregroundStyle(Color.secondary)
@@ -55,6 +64,32 @@ struct ProfileView: View {
         }
         .navigationTitle("Profile")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("Delete Account", isPresented: $showDeleteAlert) {
+            Button("Delete", role: .destructive) {
+                Task { await performDeleteAccount() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently delete your account and all your data. This cannot be undone.")
+        }
+        .alert("Error", isPresented: Binding(
+            get: { deleteError != nil },
+            set: { if !$0 { deleteError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(deleteError ?? "")
+        }
+    }
+
+    private func performDeleteAccount() async {
+        isDeletingAccount = true
+        do {
+            try await auth.deleteAccount(context: modelContext)
+        } catch {
+            isDeletingAccount = false
+            deleteError = error.localizedDescription
+        }
     }
 }
 
