@@ -7,6 +7,7 @@ import Foundation
 import OSLog
 import Supabase
 import SwiftData
+import UIKit
 
 private let logger = Logger(subsystem: "com.cleansed", category: "Auth")
 
@@ -55,6 +56,14 @@ class AuthManager: ObservableObject {
             self.currentUserId = session.user.id
             self.currentUserEmail = session.user.email
         }
+    }
+
+    func signInWithGoogle() async throws {
+        let url = try await supabase.auth.getOAuthSignInURL(
+            provider: .google,
+            redirectTo: URL(string: "cleansed://login-callback")
+        )
+        await UIApplication.shared.open(url)
     }
 
     func signIn(email: String, password: String) async throws {

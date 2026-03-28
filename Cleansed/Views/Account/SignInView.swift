@@ -93,6 +93,41 @@ struct SignInView: View {
             .disabled(isLoading || email.isEmpty || password.isEmpty)
             .padding(.top, 10)
 
+            // Divider
+            HStack {
+                Rectangle().frame(height: 1).foregroundColor(Color.gray.opacity(0.3))
+                Text("or").font(.caption).foregroundColor(.secondary).padding(.horizontal, 8)
+                Rectangle().frame(height: 1).foregroundColor(Color.gray.opacity(0.3))
+            }
+            .padding(.vertical, 4)
+
+            // Google sign-in
+            Button(action: {
+                Task {
+                    isLoading = true
+                    errorMessage = nil
+                    do {
+                        try await auth.signInWithGoogle()
+                    } catch {
+                        errorMessage = error.localizedDescription
+                    }
+                    isLoading = false
+                }
+            }) {
+                HStack(spacing: 10) {
+                    Image(systemName: "globe")
+                    Text("Continue with Google")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.systemBackground))
+                .foregroundColor(Color(.label))
+                .cornerRadius(30)
+                .overlay(RoundedRectangle(cornerRadius: 30).stroke(Color.gray.opacity(0.4), lineWidth: 1))
+            }
+            .disabled(isLoading)
+
             // Toggle sign-in / sign-up
             Button(isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up")
             {
