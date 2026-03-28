@@ -39,4 +39,5 @@ logo/
 
 # Secrets
 Cleansed/SupabaseClient.swift
+schema.sql
 
