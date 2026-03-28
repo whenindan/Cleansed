@@ -140,9 +140,12 @@ struct TodoView: View {
                             Button { todoFontSize += 1 } label: {
                                 Label("Increase", systemImage: "plus")
                             }
+                            .menuActionDismissBehavior(.disabled)
+                            
                             Button { todoFontSize -= 1 } label: {
                                 Label("Decrease", systemImage: "minus")
                             }
+                            .menuActionDismissBehavior(.disabled)
                         }
 
                         Section("Font Weight") {
@@ -153,6 +156,8 @@ struct TodoView: View {
                                 Text("Semibold").tag("semibold")
                                 Text("Bold").tag("bold")
                             }
+                            .pickerStyle(.menu)
+                            .menuActionDismissBehavior(.disabled)
                         }
 
                         Button(role: .destructive) {
