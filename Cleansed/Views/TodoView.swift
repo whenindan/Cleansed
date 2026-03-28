@@ -15,6 +15,9 @@ struct TodoView: View {
     @Query(sort: \TodoItem.createdAt, order: .reverse) private var todos: [TodoItem]
     @State private var hasSynced = false
 
+    @AppStorage("todoFontSize") private var todoFontSize: Double = 18
+    @AppStorage("todoFontWeight") private var todoFontWeight: String = "regular"
+
     /// Incomplete first (Oldest sortDate -> Newest), then Completed (Most recently completed -> Oldest).
     private var sortedTodos: [TodoItem] {
         todos.sorted {
@@ -33,62 +36,127 @@ struct TodoView: View {
     @State private var newTodoTitle = ""
     @FocusState private var isFocused: Bool
 
+    private var fontWeight: Font.Weight {
+        switch todoFontWeight {
+        case "light": return .light
+        case "medium": return .medium
+        case "semibold": return .semibold
+        case "bold": return .bold
+        default: return .regular
+        }
+    }
+
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            VStack(alignment: .leading, spacing: 0) {
-                if todos.isEmpty {
-                    ContentUnavailableView(
-                        "All clear",
-                        systemImage: "checkmark.circle",
-                        description: Text("Tap + to add a task")
-                    )
-                    .frame(maxHeight: .infinity)
-                } else {
-                    List {
-                        ForEach(sortedTodos) { todo in
-                            Button {
-                                withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
-                                    todo.isCompleted.toggle()
-                                    if todo.isCompleted {
-                                        todo.completedAt = Date()
-                                    } else {
-                                        todo.completedAt = nil
-                                        todo.sortDate = Date()
-                                    }
-                                    try? modelContext.save()
-                                    TodoManager.shared.syncTodosToUserDefaults(todos)
-                                    // Mirror to Supabase if signed in
-                                    if auth.isAuthenticated {
-                                        Task {
-                                            try? await SupabaseManager.shared.completeTodo(
-                                                id: todo.id, isCompleted: todo.isCompleted)
+        NavigationStack {
+            ZStack(alignment: .bottomTrailing) {
+                VStack(alignment: .leading, spacing: 0) {
+                    if todos.isEmpty {
+                        ContentUnavailableView(
+                            "All clear",
+                            systemImage: "checkmark.circle",
+                            description: Text("Tap + to add a task")
+                        )
+                        .frame(maxHeight: .infinity)
+                    } else {
+                        List {
+                            ForEach(sortedTodos) { todo in
+                                Button {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                                        todo.isCompleted.toggle()
+                                        if todo.isCompleted {
+                                            todo.completedAt = Date()
+                                        } else {
+                                            todo.completedAt = nil
+                                            todo.sortDate = Date()
+                                        }
+                                        try? modelContext.save()
+                                        TodoManager.shared.syncTodosToUserDefaults(todos)
+                                        // Mirror to Supabase if signed in
+                                        if auth.isAuthenticated {
+                                            Task {
+                                                try? await SupabaseManager.shared.completeTodo(
+                                                    id: todo.id, isCompleted: todo.isCompleted)
+                                            }
                                         }
                                     }
+                                } label: {
+                                    Text(todo.title)
+                                        .font(.system(size: CGFloat(todoFontSize), weight: fontWeight, design: .default))
+                                        .foregroundStyle(
+                                            todo.isCompleted ? Color.secondary : Color.primary
+                                        )
+                                        .strikethrough(todo.isCompleted, color: Color.secondary)
+                                        .animation(.easeInOut(duration: 0.2), value: todo.isCompleted)
                                 }
-                            } label: {
-                                Text(todo.title)
-                                    .font(.system(size: 18, weight: .regular, design: .default))
-                                    .foregroundStyle(
-                                        todo.isCompleted ? Color.secondary : Color.primary
-                                    )
-                                    .strikethrough(todo.isCompleted, color: Color.secondary)
-                                    .animation(.easeInOut(duration: 0.2), value: todo.isCompleted)
+                                .buttonStyle(.plain)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(
+                                    EdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24))
                             }
-                            .buttonStyle(.plain)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(
-                                EdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24))
+                            .onDelete(perform: deleteTodos)
                         }
-                        .onDelete(perform: deleteTodos)
+                        .animation(
+                            .spring(response: 0.4, dampingFraction: 0.75), value: sortedTodos.map(\.id)
+                        )
+                        .padding(.top, 24)
+                        .hideListSeparators()
                     }
-                    .animation(
-                        .spring(response: 0.4, dampingFraction: 0.75), value: sortedTodos.map(\.id)
-                    )
-                    .padding(.top, 24)
-                    .hideListSeparators()
                 }
+                .background(Color(.systemBackground))
+
+                // Customization Menu Button (Top Right)
+                VStack {
+                    HStack {
+                        Spacer()
+                        Menu {
+                            Section("Font Size") {
+                                Button { todoFontSize += 1 } label: {
+                                    Label("Increase", systemImage: "plus")
+                                }
+                                .menuActionDismissBehavior(.disabled)
+
+                                Button { todoFontSize -= 1 } label: {
+                                    Label("Decrease", systemImage: "minus")
+                                }
+                                .menuActionDismissBehavior(.disabled)
+                            }
+
+                            Section("Font Weight") {
+                                Picker("Weight", selection: $todoFontWeight) {
+                                    Text("Light").tag("light")
+                                    Text("Regular").tag("regular")
+                                    Text("Medium").tag("medium")
+                                    Text("Semibold").tag("semibold")
+                                    Text("Bold").tag("bold")
+                                }
+                                .pickerStyle(.menu)
+                                .menuActionDismissBehavior(.disabled)
+                            }
+
+                            Button(role: .destructive) {
+                                todoFontSize = 18
+                                todoFontWeight = "regular"
+                            } label: {
+                                Label("Reset Defaults", systemImage: "arrow.counterclockwise")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: 20))
+                                .foregroundStyle(Color.primary)
+                                .frame(width: 44, height: 44)
+                                .background(Color(.systemBackground).opacity(0.1))
+                                .clipShape(Circle())
+                        }
+                        .padding(.top, 8)
+                        .padding(.trailing, 16)
+                    }
+                    Spacer()
+                }
+
+                FAB { isAddSheetPresented = true }
+                    .padding(24)
             }
-            .background(Color(.systemBackground))
+            .toolbar(.hidden, for: .navigationBar)
             .onChange(of: todos) { _, newTodos in
                 TodoManager.shared.syncTodosToUserDefaults(newTodos)
             }
@@ -115,11 +183,9 @@ struct TodoView: View {
                 await DataSyncManager.shared.loadFromSupabase(userId: userId, context: modelContext)
                 TodoManager.shared.syncTodosToUserDefaults(todos)
             }
-
-            FAB { isAddSheetPresented = true }
-                .padding(24)
         }
         .sheet(isPresented: $isAddSheetPresented) {
+
             NavigationStack {
                 Form {
                     TextField("New Task", text: $newTodoTitle)

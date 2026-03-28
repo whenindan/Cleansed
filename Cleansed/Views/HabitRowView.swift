@@ -141,14 +141,22 @@ struct DayCircleView: View {
     var body: some View {
         Button(action: onTap) {
             ZStack {
-                Circle()
-                    .fill(isCompleted ? Color.primary : Color.clear)
-                    .frame(width: 44, height: 44)
+                if isCompleted {
+                    Circle()
+                        .fill(Color.primary)
+                } else if state == .today {
+                    Circle()
+                        .stroke(Color.primary.opacity(0.3), lineWidth: 1)
+                } else {
+                    Circle()
+                        .fill(Color.clear)
+                }
 
                 Text(dayLabel)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(isCompleted ? Color(.systemBackground) : Color.primary)
             }
+            .frame(width: 44, height: 44)
         }
         .buttonStyle(.borderless)
         .disabled(state != .today)

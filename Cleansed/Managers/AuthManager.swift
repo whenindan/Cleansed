@@ -5,6 +5,7 @@
 
 import Foundation
 import Supabase
+import SwiftData
 
 @MainActor
 class AuthManager: ObservableObject {
@@ -66,6 +67,19 @@ class AuthManager: ObservableObject {
 
     func signOut() async throws {
         try await supabase.auth.signOut()
+        self.isAuthenticated = false
+        self.isGuest = false
+        self.currentUserId = nil
+        self.currentUserEmail = nil
+    }
+
+    func changePassword(newPassword: String) async throws {
+        try await supabase.auth.update(user: UserAttributes(password: newPassword))
+    }
+
+    func deleteAccount(context: ModelContext) async throws {
+        try await supabase.rpc("delete_my_account").execute()
+        DataSyncManager.shared.clearLocalData(context: context)
         self.isAuthenticated = false
         self.isGuest = false
         self.currentUserId = nil

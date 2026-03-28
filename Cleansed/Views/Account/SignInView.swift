@@ -4,6 +4,7 @@ import SwiftUI
 struct SignInView: View {
     @EnvironmentObject var auth: AuthManager
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) var colorScheme
     @Query private var localTodos: [TodoItem]
     @Query private var localHabits: [Habit]
 
@@ -16,10 +17,18 @@ struct SignInView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Spacer().frame(height: 20)
+            Spacer().frame(height: 10)
+
+            // Logo
+            Image(colorScheme == .dark ? "logo-dark" : "logo-light")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 80, height: 80)
+                .padding(.bottom, 10)
 
             Text(isSignUp ? "Create Account" : "Welcome Back")
                 .font(.title2.bold())
+                .textCase(.lowercase)
 
             // Email Field
             TextField("Enter your email", text: $email)
@@ -28,7 +37,7 @@ struct SignInView: View {
                 .padding()
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(12)
-
+            
             // Password Field
             HStack {
                 if isPasswordVisible {
