@@ -7,6 +7,7 @@ import Foundation
 import OSLog
 import Supabase
 import SwiftData
+import UIKit
 
 private let logger = Logger(subsystem: "com.cleansed", category: "Auth")
 
@@ -44,28 +45,13 @@ class AuthManager: ObservableObject {
 
     // MARK: - Auth Actions
 
-    func signUp(email: String, password: String) async throws {
-        let response = try await supabase.auth.signUp(
-            email: email,
-            password: password
+    func signInWithGoogle() async throws {
+        let url = try await supabase.auth.getOAuthSignInURL(
+            provider: .google,
+            redirectTo: URL(string: "cleansed://login-callback"),
+            queryParams: [("prompt", "select_account")]
         )
-        if let session = response.session {
-            self.isAuthenticated = true
-            self.isGuest = false
-            self.currentUserId = session.user.id
-            self.currentUserEmail = session.user.email
-        }
-    }
-
-    func signIn(email: String, password: String) async throws {
-        let session = try await supabase.auth.signIn(
-            email: email,
-            password: password
-        )
-        self.isAuthenticated = true
-        self.isGuest = false
-        self.currentUserId = session.user.id
-        self.currentUserEmail = session.user.email
+        await UIApplication.shared.open(url)
     }
 
     func signOut() async throws {
@@ -74,10 +60,6 @@ class AuthManager: ObservableObject {
         self.isGuest = false
         self.currentUserId = nil
         self.currentUserEmail = nil
-    }
-
-    func changePassword(newPassword: String) async throws {
-        try await supabase.auth.update(user: UserAttributes(password: newPassword))
     }
 
     func deleteAccount(context: ModelContext) async throws {
@@ -100,4 +82,3 @@ class AuthManager: ObservableObject {
         }
     }
 }
-    
