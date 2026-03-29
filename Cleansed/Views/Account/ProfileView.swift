@@ -18,11 +18,6 @@ struct ProfileView: View {
                             .foregroundStyle(Color.primary)
                     }
 
-                    NavigationLink(destination: ChangePasswordView().environmentObject(auth)) {
-                        Label("Change Password", systemImage: "key.fill")
-                            .foregroundStyle(Color.primary)
-                    }
-
                     Button(role: .destructive) {
                         Task {
                             DataSyncManager.shared.clearLocalData(context: modelContext)
